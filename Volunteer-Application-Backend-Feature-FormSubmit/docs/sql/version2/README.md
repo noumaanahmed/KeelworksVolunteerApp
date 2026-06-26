@@ -1,0 +1,12 @@
+## notes: Changes
+- remove indexing from state table
+- removed state_code column from state table 
+- replaced state_code column with state_id in city table
+- renamed zipcode column to zip_code in city table
+- removed VisaStatus table
+- added new column "employee_type" added in employee table
+- rename desired_start_date column to start_date in employee table
+- added new column "resume_url" in employee table while keeping Resume table. (needs fixing)
+- removed foreign key for address_id column from employee table. Breaking the link between employee and address (need fixing)
+- foregin key removed from country_code_phone column in employee table
+- added new column "phone_country_id" and made it foregn key column in employee table
