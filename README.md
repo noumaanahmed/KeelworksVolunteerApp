@@ -66,7 +66,7 @@ The current version includes both applicant and admin flows in one application. 
 
 ```text
 keelworks-volunteer-platform/
-  Volunteer-Application-Backend-Feature-FormSubmit/
+  apps/api/
     docs/
       sql/
         00_RUN_ALL_IN_ORDER.sql
@@ -87,7 +87,7 @@ keelworks-volunteer-platform/
       index.js
       package.json
 
-  Volunteer-Application-Frontend-main/
+  apps/applicant-portal/
     src/
       components/
       App.js
@@ -173,7 +173,7 @@ Resume
 Go to the backend `src` folder:
 
 ```bash
-cd Volunteer-Application-Backend-Feature-FormSubmit/src
+cd apps/api
 ```
 
 Create a `.env` file:
@@ -249,7 +249,7 @@ Open a new terminal window.
 Go to the frontend folder:
 
 ```bash
-cd Volunteer-Application-Frontend-main
+cd apps/applicant-portal
 npm install
 npm start
 ```

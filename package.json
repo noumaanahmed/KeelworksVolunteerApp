@@ -1,0 +1,17 @@
+{
+  "name": "keelworks-volunteer-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/applicant-portal",
+    "apps/admin-portal",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace apps/api",
+    "dev:applicant": "npm start --workspace apps/applicant-portal",
+    "dev:admin": "npm start --workspace apps/admin-portal",
+    "build:applicant": "npm run build --workspace apps/applicant-portal",
+    "build:admin": "npm run build --workspace apps/admin-portal"
+  }
+}

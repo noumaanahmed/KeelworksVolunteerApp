@@ -171,3 +171,4 @@ apikey.json
 service-account*.json
 google-credentials*.json
 credentials*.json
+__MACOSX/
