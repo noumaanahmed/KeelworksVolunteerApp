@@ -1,4 +1,4 @@
-import "dotenv/config.js";
+import "dotenv/config";
 import { Sequelize } from 'sequelize';
 
 const dbInstance = new Sequelize(process.env.MYSQL_DB_NAME, process.env.MYSQL_USERNAME , process.env.MYSQL_PASSWORD, {

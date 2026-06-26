@@ -1,9 +1,9 @@
 import { dbInstance } from '../config/dbConnect.js';
-import Address from '../data/models/addressModel.js';
-import EEOData from '../data/models/eeoModel.js';
-import Education from '../data/models/educationModel.js';
-import Employee from '../data/models/employeeModel.js';
-import Employment from '../data/models/employmentModel.js';
+import Address from './models/addressModel.js';
+import EEOData from './models/eeoModel.js';
+import Education from './models/educationModel.js';
+import Employee from './models/employeeModel.js';
+import Employment from './models/employmentModel.js';
 
 export const registerEmployee = async (data)=>{
     let {employee_data, address_data, education_data, employment_data, eod_data} = data;

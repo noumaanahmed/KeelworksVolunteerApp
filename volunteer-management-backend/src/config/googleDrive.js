@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 // import apikeys from "../apikey.json" assert { type: "json" };
-import "dotenv/config.js";
+import "dotenv/config";
 
 const SCOPE = ['https://www.googleapis.com/auth/drive'];
 

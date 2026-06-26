@@ -2,7 +2,7 @@
 import Employee from '../data/models/employeeModel.js';
 import newValidations from "../utils/validations/index.js"
 import locationDataFunctions from "../data/locationData.js"
-import "dotenv/config.js";
+import "dotenv/config";
 import employeePostMapper from '../dtos/employeeMapper.js';
 import { generateToken } from '../utils/jwt/jwtFunctions.js';
 import { registerEmployee } from '../data/applicantDetailsData.js';
