@@ -7,7 +7,6 @@ import RoleAndAvailability from "./components/RoleAndAvailability";
 import AdditionalInformation from "./components/AdditionalInformation";
 import Identification from "./components/Identification";
 import AuthPage from "./components/AuthPage";
-import AdminDashboard from "./components/AdminDashboard";
 import ApplicantDashboard from "./components/ApplicantDashboard";
 import ThankYouPage from "./components/ThankYouPage";
 import ProfileMenu from "./components/ProfileMenu";
@@ -26,6 +25,7 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [applicantView, setApplicantView] = useState(VIEW_DASHBOARD);
   const [step, setStep] = useState(1);
+
   const [formData, setFormData] = useState({
     personalInformation: {},
     educationAndExperience: {},
@@ -33,15 +33,30 @@ export default function App() {
     additionalInformation: {},
     identification: {},
   });
+
   const [countries, setCountries] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("kw_token");
-    const user = localStorage.getItem("kw_user");
+    const token = localStorage.getItem("kw_volunteer_token");
+    const user = localStorage.getItem("kw_volunteer_user");
+
     if (token && user) {
-      setAuthToken(token);
-      setAuthUser(JSON.parse(user));
+      try {
+        const parsedUser = JSON.parse(user);
+
+        if (parsedUser.role === "applicant") {
+          setAuthToken(token);
+          setAuthUser(parsedUser);
+        } else {
+          localStorage.removeItem("kw_volunteer_token");
+          localStorage.removeItem("kw_volunteer_user");
+        }
+      } catch {
+        localStorage.removeItem("kw_volunteer_token");
+        localStorage.removeItem("kw_volunteer_user");
+      }
     }
+
     setAuthChecked(true);
   }, []);
 
@@ -49,14 +64,16 @@ export default function App() {
   // and returns them to the Sign In page.
   useEffect(() => {
     const handlePopState = () => {
-      const stillLoggedIn = localStorage.getItem("kw_token");
+      const stillLoggedIn = localStorage.getItem("kw_volunteer_token");
+
       if (stillLoggedIn) {
-        localStorage.removeItem("kw_token");
-        localStorage.removeItem("kw_user");
+        localStorage.removeItem("kw_volunteer_token");
+        localStorage.removeItem("kw_volunteer_user");
         setAuthUser(null);
         setAuthToken(null);
       }
     };
+
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
@@ -64,26 +81,41 @@ export default function App() {
   useEffect(() => {
     fetch(`${API}/api/v1/apply/countries`)
       .then((res) => res.json())
-      .then((data) => { if (data && data.data) setCountries(data.data); })
+      .then((data) => {
+        if (data && data.data) setCountries(data.data);
+      })
       .catch(() => setCountries([]));
   }, []);
 
   const handleAuthSuccess = (user, token) => {
+    if (user.role !== "applicant") {
+      alert(
+        "This portal is only for volunteers/applicants. Please use the admin portal."
+      );
+      return;
+    }
+
+    localStorage.setItem("kw_volunteer_token", token);
+    localStorage.setItem("kw_volunteer_user", JSON.stringify(user));
+
     setAuthUser(user);
     setAuthToken(token);
     setApplicantView(VIEW_DASHBOARD);
+
     // Push a new history entry so the browser Back button has somewhere
-    // to go (back to the Sign In page) instead of leaving the site.
+    // to go instead of leaving the site.
     window.history.pushState({ loggedIn: true }, "", window.location.pathname);
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem("kw_token");
-    localStorage.removeItem("kw_user");
+    localStorage.removeItem("kw_volunteer_token");
+    localStorage.removeItem("kw_volunteer_user");
+
     setAuthUser(null);
     setAuthToken(null);
     setApplicantView(VIEW_DASHBOARD);
     setStep(1);
+
     setFormData({
       personalInformation: {},
       educationAndExperience: {},
@@ -100,7 +132,7 @@ export default function App() {
 
   const handleReturnHomeFromThankYou = () => {
     // "Return to home" after a successful application takes the user back
-    // to the Sign In page (per requirement), signing them out in the process.
+    // to the Sign In page, signing them out in the process.
     handleSignOut();
   };
 
@@ -108,8 +140,13 @@ export default function App() {
     setFormData((prev) => ({ ...prev, [stepName]: data }));
   };
 
-  const handleNextButton = () => { if (step < 5) setStep(step + 1); };
-  const handleBackButton = () => { if (step > 1) setStep(step - 1); };
+  const handleNextButton = () => {
+    if (step < 5) setStep(step + 1);
+  };
+
+  const handleBackButton = () => {
+    if (step > 1) setStep(step - 1);
+  };
 
   // Resolve the typed city name into a real city_id.
   // Looks up existing cities for the chosen state; creates a new one if not found.
@@ -119,11 +156,13 @@ export default function App() {
 
     try {
       const citiesRes = await fetch(`${API}/api/v1/apply/cities/${stateId}`);
+
       if (citiesRes.ok) {
         const citiesJson = await citiesRes.json();
         const match = (citiesJson.data || []).find(
           (c) => c.city_name.toLowerCase() === trimmed.toLowerCase()
         );
+
         if (match) return match.city_id;
       }
     } catch (err) {
@@ -136,6 +175,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state_id: stateId, city_name: trimmed }),
       });
+
       if (createRes.ok) {
         const createJson = await createRes.json();
         return createJson.data.city_id;
@@ -147,18 +187,18 @@ export default function App() {
     return null;
   };
 
-  // Converts "MM/YYYY" (as collected by the form) into "YYYY-MM-01" which the
-  // backend's date validators expect.
+  // Converts "MM/YYYY" into "YYYY-MM-01" for backend date validators.
   const monthYearToISO = (mmYYYY) => {
     if (!mmYYYY) return null;
+
     const match = /^(\d{2})\/(\d{4})$/.exec(mmYYYY.trim());
     if (!match) return null;
+
     const [, mm, yyyy] = match;
     return `${yyyy}-${mm}-01`;
   };
 
-  // Maps the multi-step form's field names to exactly what the backend
-  // (employeeMapper.js -> validations/employee) expects.
+  // Maps the multi-step form's field names to what the backend expects.
   const buildApplicationPayload = (data, cityId) => {
     const personal = data.personalInformation || {};
     const role = data.roleAndAvailability || {};
@@ -166,7 +206,10 @@ export default function App() {
     const identification = data.identification || {};
     const edu = data.educationAndExperience || {};
 
-    const visaStatus = role.visaStatus === "Other" ? (role.visaOther || "Other") : role.visaStatus || "";
+    const visaStatus =
+      role.visaStatus === "Other"
+        ? role.visaOther || "Other"
+        : role.visaStatus || "";
 
     const educations = (edu.education || []).map((e) => ({
       institution_name: e.school || "",
@@ -204,13 +247,18 @@ export default function App() {
       zip_code: personal.zipcode || "",
       country_id: personal.homeCountry || null,
 
-      // keelworks-specific (backend field names)
+      // KeelWorks-specific backend field names
       why_kworks: additional.interestReason || "",
-      interested_role: role.interestedRole === "Other" ? (role.otherRole || "Other") : (role.interestedRole || ""),
-      hours_commitment: role.hoursAvailable ? Number(role.hoursAvailable) : null,
+      interested_role:
+        role.interestedRole === "Other"
+          ? role.otherRole || "Other"
+          : role.interestedRole || "",
+      hours_commitment: role.hoursAvailable
+        ? Number(role.hoursAvailable)
+        : null,
       start_date: role.desiredStartDate || "",
 
-      // enums (backend will map/validate these)
+      // enums / extra profile fields
       visa_status: visaStatus,
       gender: identification.gender || "",
       opt_support: role.optSupport || "",
@@ -220,7 +268,7 @@ export default function App() {
       sexual_orientation: identification.sexualOrientation || "",
       disability: identification.disability || "",
 
-      // education / employment history (converted to backend field names + ISO dates)
+      // education / employment history
       educations,
       employments,
     };
@@ -233,8 +281,11 @@ export default function App() {
     const personal = finalData.personalInformation || {};
 
     const cityId = await resolveCityId(personal.state, personal.cityName);
+
     if (!cityId) {
-      alert("We couldn't save your city. Please check your State and City fields and try again.");
+      alert(
+        "We couldn't save your city. Please check your State and City fields and try again."
+      );
       return;
     }
 
@@ -243,19 +294,30 @@ export default function App() {
     try {
       const res = await fetch(`${API}/api/v1/apply/employees`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
         let errMsg = "Submission failed";
+
         if (errJson) {
           const errObj = errJson.error;
+
           if (errObj && Array.isArray(errObj.details)) {
-            errMsg = errObj.details.map((d) => d.message || `${d.field}: invalid value`).join("; ");
+            errMsg = errObj.details
+              .map((d) => d.message || `${d.field}: invalid value`)
+              .join("; ");
           } else if (typeof errObj === "string") {
             errMsg = errObj;
-          } else if (typeof errJson.message === "string" && errJson.message !== "Validation error") {
+          } else if (
+            typeof errJson.message === "string" &&
+            errJson.message !== "Validation error"
+          ) {
             errMsg = errJson.message;
           } else if (errObj) {
             errMsg = JSON.stringify(errObj);
@@ -263,23 +325,35 @@ export default function App() {
             errMsg = errJson.message;
           }
         }
+
         throw new Error(errMsg);
       }
     } catch (error) {
       console.error("Submission failed:", error);
-      alert(`Unable to submit your application: ${error.message || "Please try again."}`);
+      alert(
+        `Unable to submit your application: ${
+          error.message || "Please try again."
+        }`
+      );
       return;
     }
 
     const email = finalData.personalInformation?.email;
-    const name = [finalData.personalInformation?.firstName, finalData.personalInformation?.lastName]
-      .filter(Boolean).join(" ");
+    const name = [
+      finalData.personalInformation?.firstName,
+      finalData.personalInformation?.lastName,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     if (email) {
       try {
         await fetch(`${API}/api/v1/apply/send-confirmation-email`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
           body: JSON.stringify({ email, name }),
         });
       } catch (err) {
@@ -293,18 +367,80 @@ export default function App() {
 
   const renderStep = () => {
     switch (step) {
-      case 1: return <PersonalInformation handleNextButton={handleNextButton} handleFormChange={(d) => handleFormChange("personalInformation", d)} initialData={formData.personalInformation} countries={countries} authUser={authUser} />;
-      case 2: return <EducationAndExperience handleNextButton={handleNextButton} handleBackButton={handleBackButton} handleFormChange={(d) => handleFormChange("educationAndExperience", d)} initialData={formData.educationAndExperience} />;
-      case 3: return <RoleAndAvailability handleNextButton={handleNextButton} handleBackButton={handleBackButton} handleFormChange={(d) => handleFormChange("roleAndAvailability", d)} initialData={formData.roleAndAvailability} />;
-      case 4: return <AdditionalInformation handleNextButton={handleNextButton} handleBackButton={handleBackButton} handleFormChange={(d) => handleFormChange("additionalInformation", d)} initialData={formData.additionalInformation} />;
-      case 5: return <Identification handleBackButton={handleBackButton} handleFormChange={(d) => handleFormChange("identification", d)} handleFormSubmit={handleFormSubmit} initialData={formData.identification} />;
-      default: return null;
+      case 1:
+        return (
+          <PersonalInformation
+            handleNextButton={handleNextButton}
+            handleFormChange={(d) =>
+              handleFormChange("personalInformation", d)
+            }
+            initialData={formData.personalInformation}
+            countries={countries}
+            authUser={authUser}
+          />
+        );
+
+      case 2:
+        return (
+          <EducationAndExperience
+            handleNextButton={handleNextButton}
+            handleBackButton={handleBackButton}
+            handleFormChange={(d) =>
+              handleFormChange("educationAndExperience", d)
+            }
+            initialData={formData.educationAndExperience}
+          />
+        );
+
+      case 3:
+        return (
+          <RoleAndAvailability
+            handleNextButton={handleNextButton}
+            handleBackButton={handleBackButton}
+            handleFormChange={(d) =>
+              handleFormChange("roleAndAvailability", d)
+            }
+            initialData={formData.roleAndAvailability}
+          />
+        );
+
+      case 4:
+        return (
+          <AdditionalInformation
+            handleNextButton={handleNextButton}
+            handleBackButton={handleBackButton}
+            handleFormChange={(d) =>
+              handleFormChange("additionalInformation", d)
+            }
+            initialData={formData.additionalInformation}
+          />
+        );
+
+      case 5:
+        return (
+          <Identification
+            handleBackButton={handleBackButton}
+            handleFormChange={(d) => handleFormChange("identification", d)}
+            handleFormSubmit={handleFormSubmit}
+            initialData={formData.identification}
+          />
+        );
+
+      default:
+        return null;
     }
   };
 
   if (!authChecked) return null;
-  if (!authUser) return <AuthPage onAuthSuccess={handleAuthSuccess} />;
-  if (authUser.role === "admin") return <AdminDashboard user={authUser} token={authToken} onSignOut={handleSignOut} />;
+
+  if (!authUser) {
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  if (authUser.role !== "applicant") {
+    handleSignOut();
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
 
   // ===== Applicant side =====
 
@@ -329,8 +465,12 @@ export default function App() {
       <header className="header">
         <div className="headerText">
           <h1>KeelWorks Volunteer Sign Up</h1>
-          <p>Join our dedicated team of volunteers and make a lasting impact in our community.</p>
+          <p>
+            Join our dedicated team of volunteers and make a lasting impact in
+            our community.
+          </p>
         </div>
+
         <div style={{ position: "absolute", top: "16px", right: "20px" }}>
           <ProfileMenu
             name={authUser.full_name}
@@ -340,14 +480,34 @@ export default function App() {
             onDashboard={() => setApplicantView(VIEW_DASHBOARD)}
           />
         </div>
-        <img className="headerBgImg" src={HeaderBackgroundImage} alt="Keelworks" />
+
+        <img
+          className="headerBgImg"
+          src={HeaderBackgroundImage}
+          alt="Keelworks"
+        />
       </header>
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "20px" }}>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          padding: "20px",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ marginRight: "40px", marginTop: "55px" }}>
             <VerticalStepper step={step} />
           </div>
-          <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+
+          <div
+            style={{
+              flexGrow: 1,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             {renderStep()}
           </div>
         </div>
