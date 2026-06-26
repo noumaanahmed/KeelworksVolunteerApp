@@ -4,7 +4,6 @@ import newValidations from "../utils/validations/index.js"
 import locationDataFunctions from "../data/locationData.js"
 import "dotenv/config";
 import employeePostMapper from '../dtos/employeeMapper.js';
-import { generateToken } from '../utils/jwt/jwtFunctions.js';
 import { registerEmployee } from '../data/applicantDetailsData.js';
 
 // Helper function for standardized response format
@@ -64,20 +63,24 @@ export const createEmployee = async (req, res, next) => {
         }
         
         try {
-            let userId = await registerEmployee({employee_data, address_data, education_data, employment_data, eod_data})
-            const token = generateToken(userId);
-            // Return success response
-            return res.status(201).json(createResponse(
-                'success',
-                201,
-                'Employee created successfully',
-                {
-                    employee: {
-                        employee_id: userId,
-                        token
-                    }
-                }
-            ));
+const employeeId = await registerEmployee({
+    employee_data,
+    address_data,
+    education_data,
+    employment_data,
+    eod_data
+});
+
+return res.status(201).json(createResponse(
+    'success',
+    201,
+    'Employee created successfully',
+    {
+        employee: {
+            employee_id: employeeId
+        }
+    }
+));
         } catch (error) {
             console.error('registerEmployee error:', error);
 
