@@ -1,4 +1,4 @@
-// controllers/employeeController.js
+// controllers/employee.controller.js
 import Employee from '../models/employeeModel.js';
 import newValidations from "../validators/application/index.js"
 import locationDataFunctions from "../repositories/location.repository.js"

@@ -1,5 +1,5 @@
-import routes from "./applyRoutes.js";
-import authRouter from "./authRoutes.js";
+import routes from "./apply.routes.js";
+import authRouter from "./auth.routes.js";
 
 const createResponse = (status, statusCode, message, data = null, error = null) => ({
   status, statusCode, message, data, error,

@@ -1,42 +1,42 @@
 # KeelWorks Volunteer Management Platform
 
-A full-stack volunteer management application built for KeelWorks. The platform allows volunteers/applicants to create accounts, submit profile/application details, and allows admins to review submitted applications.
+A full-stack volunteer management platform for KeelWorks.
 
-The current version includes both applicant and admin flows in one application. The long-term plan is to separate this into two applications:
+This project contains three main applications:
 
-1. Volunteer Portal — for volunteers/applicants to sign up and submit applications.
-2. Admin Portal — for admins to sign up, review applications, and manage volunteer records.
+1. **Applicant Portal** — for volunteers/applicants to sign up, sign in, and submit volunteer applications.
+2. **Admin Portal** — for admins to sign in and review submitted volunteer applications.
+3. **Backend API** — shared Express/MySQL API used by both frontends.
 
-## Features
+The project is organized as a monorepo using **npm workspaces**.
 
-### Volunteer / Applicant Features
+---
 
-* Create an applicant account
-* Sign in with email and password
-* Fill out a multi-step volunteer application form
-* Select country, state, and city
-* Add personal information
-* Add role and availability details
-* Add employment history
-* Submit volunteer application
-* View submitted applications
+## Project Structure
 
-### Admin Features
+```text
+KeelworksVolunteerApp/
+  apps/
+    applicant-portal/        # React frontend for volunteer applicants
+    admin-portal/            # React frontend for admins
+    api/                     # Express + MySQL backend API
 
-* Create an admin account using an admin secret key
-* Sign in as admin
-* View submitted volunteer applications
-* See application status such as pending/reviewing/approved/rejected
+  database/
+    sql/                     # SQL setup and database migration scripts
 
-### Backend Features
+  docs/
+    setup/                   # Extra setup notes and project documentation
 
-* REST API built with Express.js
-* MySQL database integration using Sequelize
-* JWT-based authentication
-* Role-based access control for applicant/admin users
-* Database migrations/setup scripts
-* Applicant data stored across normalized tables such as users, Employee, Address, City, State, Country, Employment, and EEOData
-* Optional confirmation email support through Gmail app password
+  scripts/
+    manual-tests/            # Optional/manual test scripts
+
+  package.json              # Root workspace package.json
+  package-lock.json          # Root npm lock file
+  .gitignore
+  README.md
+```
+
+---
 
 ## Tech Stack
 
@@ -45,87 +45,945 @@ The current version includes both applicant and admin flows in one application. 
 * React
 * JavaScript
 * CSS
-* localStorage for session persistence
+* React Scripts / Create React App style setup
 
 ### Backend
 
 * Node.js
-* Express.js
-* Sequelize ORM
+* Express
 * MySQL
+* Sequelize
 * JWT authentication
-* bcrypt password hashing
-* nodemailer for optional email confirmation
+* Nodemon for local development
 
-### Database
+### Repository Setup
 
-* MySQL
-* MySQL Workbench recommended for local setup
+* npm workspaces
+* One root `node_modules`
+* One root `package-lock.json`
+* Separate `package.json` files for each app
 
-## Project Structure
+---
+
+## Applications
+
+## 1. Applicant Portal
+
+Location:
 
 ```text
-keelworks-volunteer-platform/
-  apps/api/
-    docs/
-      sql/
-        00_RUN_ALL_IN_ORDER.sql
-        01_add_user_name_columns.sql
-        02_fix_remaining_gaps.sql
-        03_add_interested_role.sql
-    src/
-      config/
-      controllers/
-      data/
-      docs/
-      dtos/
-      middleware/
-      routes/
-      test/
-      utils/
-      .env.example
-      index.js
-      package.json
-
-  apps/applicant-portal/
-    src/
-      components/
-      App.js
-      index.js
-    package.json
+apps/applicant-portal
 ```
 
-## Local Setup Guide
+Purpose:
 
-### Prerequisites
+The applicant portal is used by volunteers to:
 
-Make sure you have the following installed:
+* Create an applicant account
+* Sign in
+* Start a volunteer application
+* Fill out personal information
+* Fill out education and experience
+* Choose role and availability
+* Enter additional information
+* Submit the application
+
+Default local URL:
+
+```text
+http://localhost:3001
+```
+
+Environment file:
+
+```text
+apps/applicant-portal/.env
+```
+
+Example:
+
+```env
+PORT=3001
+REACT_APP_API_BASE_URL=http://localhost:3000
+```
+
+---
+
+## 2. Admin Portal
+
+Location:
+
+```text
+apps/admin-portal
+```
+
+Purpose:
+
+The admin portal is used by admins to:
+
+* Sign in as an admin
+* View submitted volunteer applications
+* Review applicant details
+
+Default local URL:
+
+```text
+http://localhost:3002
+```
+
+Environment file:
+
+```text
+apps/admin-portal/.env
+```
+
+Example:
+
+```env
+PORT=3002
+REACT_APP_API_BASE_URL=http://localhost:3000
+```
+
+---
+
+## 3. Backend API
+
+Location:
+
+```text
+apps/api
+```
+
+Purpose:
+
+The backend API is shared by both frontends.
+
+It handles:
+
+* Authentication
+* Applicant signup/signin
+* Admin signup/signin
+* Volunteer application submission
+* Admin application review
+* Country/state/city lookup data
+* Email confirmation logic
+* Resume upload logic, which exists but needs a later cleanup/fix pass
+
+Default local URL:
+
+```text
+http://localhost:3000
+```
+
+Environment file:
+
+```text
+apps/api/.env
+```
+
+---
+
+# Backend Folder Structure Explained
+
+The backend source code lives inside:
+
+```text
+apps/api/src
+```
+
+Current structure:
+
+```text
+apps/api/src/
+  config/
+  controllers/
+  docs/
+  mappers/
+  middleware/
+  models/
+  repositories/
+  routes/
+  services/
+  validators/
+  index.js
+```
+
+---
+
+## `src/index.js`
+
+This is the backend entry point.
+
+It is responsible for:
+
+* Creating the Express app
+* Loading middleware
+* Enabling JSON request parsing
+* Enabling CORS
+* Connecting routes
+* Starting the server on the configured port
+* Loading Swagger API docs if enabled
+* Testing the database connection
+
+The backend starts from this file when you run:
+
+```bash
+npm run dev:api
+```
+
+---
+
+## `src/config/`
+
+The `config` folder contains configuration files used by the backend.
+
+Expected files include:
+
+```text
+config/
+  dbConnect.js
+  googleDrive.js
+  swagger.js
+```
+
+### `dbConnect.js`
+
+Handles the MySQL database connection.
+
+It is responsible for:
+
+* Reading database values from `.env`
+* Creating the Sequelize connection
+* Testing database connectivity
+
+The backend depends on this file to connect to MySQL.
+
+### `googleDrive.js`
+
+Contains Google Drive configuration for resume/document upload.
+
+This exists because the application has resume upload-related code.
+
+Current note:
+
+Resume upload should be reviewed and fixed in a later pass before being considered complete.
+
+### `swagger.js`
+
+Configures Swagger/OpenAPI documentation.
+
+It is used to serve backend API docs, usually at:
+
+```text
+http://localhost:3000/api-docs
+```
+
+---
+
+## `src/controllers/`
+
+The `controllers` folder contains request/response logic.
+
+Controllers receive requests from routes, call repositories/services/validators, and send responses back to the frontend.
+
+Expected files:
+
+```text
+controllers/
+  apply.controller.js
+  auth.controller.js
+  document.controller.js
+  employee.controller.js
+```
+
+### `apply.controller.js`
+
+Handles general application-related API logic.
+
+Used for:
+
+* Getting countries
+* Getting states
+* Getting cities
+* Getting country phone codes
+* Creating a city
+* Sending confirmation emails
+* Getting a logged-in applicant’s applications
+
+Example routes connected to this controller:
+
+```text
+GET  /api/v1/apply/countries
+GET  /api/v1/apply/states/:countryCode
+GET  /api/v1/apply/cities/:stateCode
+GET  /api/v1/apply/countryPhoneCodes
+POST /api/v1/apply/send-confirmation-email
+GET  /api/v1/apply/my-applications
+```
+
+### `auth.controller.js`
+
+Handles authentication.
+
+Used for:
+
+* Applicant signup
+* Applicant signin
+* Admin signup
+* Admin signin
+* Password validation
+* JWT token creation
+
+Example routes connected to this controller:
+
+```text
+POST /api/v1/auth/signup
+POST /api/v1/auth/signin
+```
+
+### `employee.controller.js`
+
+Handles volunteer application records.
+
+Used for:
+
+* Creating/submitting an application
+* Getting all applications for admins
+* Getting a single application by ID
+* Updating application data
+* Deleting application data
+
+Example routes connected to this controller:
+
+```text
+POST   /api/v1/apply/employees
+GET    /api/v1/apply/employees
+GET    /api/v1/apply/employees/:id
+PUT    /api/v1/apply/employees/:id
+DELETE /api/v1/apply/employees/:id
+```
+
+### `document.controller.js`
+
+Handles document/resume upload logic.
+
+Current note:
+
+This file exists because the applicant form has a resume-related flow. The upload flow should be fixed later so it properly connects to the logged-in applicant and stores resume metadata correctly.
+
+---
+
+## `src/routes/`
+
+The `routes` folder defines the API endpoints.
+
+Expected files:
+
+```text
+routes/
+  apply.routes.js
+  auth.routes.js
+  index.js
+```
+
+### `index.js`
+
+Main route entry point.
+
+It connects route groups to the Express app.
+
+For example:
+
+```text
+/api/v1/auth
+/api/v1/apply
+```
+
+### `auth.routes.js`
+
+Defines authentication routes.
+
+Usually includes:
+
+```text
+POST /signup
+POST /signin
+```
+
+Mounted under:
+
+```text
+/api/v1/auth
+```
+
+So the full route becomes:
+
+```text
+POST /api/v1/auth/signup
+POST /api/v1/auth/signin
+```
+
+### `apply.routes.js`
+
+Defines application, location, upload, and admin review routes.
+
+Mounted under:
+
+```text
+/api/v1/apply
+```
+
+Common full routes include:
+
+```text
+GET  /api/v1/apply/countries
+GET  /api/v1/apply/states/:countryCode
+GET  /api/v1/apply/cities/:stateCode
+POST /api/v1/apply/employees
+GET  /api/v1/apply/employees
+GET  /api/v1/apply/employees/:id
+```
+
+---
+
+## `src/middleware/`
+
+Middleware runs between the request and the controller.
+
+Expected files:
+
+```text
+middleware/
+  auth.middleware.js
+  validation.middleware.js
+```
+
+### `auth.middleware.js`
+
+Handles JWT authentication and admin authorization.
+
+Used for:
+
+* Verifying that a user is logged in
+* Reading the JWT token
+* Attaching the user to the request
+* Restricting admin-only routes
+
+Common functions:
+
+```text
+verifyToken
+requireAdmin
+```
+
+### `validation.middleware.js`
+
+Currently contains a simple request body check.
+
+It verifies that required POST/PUT requests actually include a body.
+
+Detailed application validation is handled separately inside:
+
+```text
+src/validators/application/
+```
+
+and used by:
+
+```text
+src/controllers/employee.controller.js
+```
+
+---
+
+## `src/models/`
+
+The `models` folder contains Sequelize models.
+
+Models represent database tables.
+
+Expected files:
+
+```text
+models/
+  addressModel.js
+  cityModel.js
+  countryModel.js
+  educationModel.js
+  employeeModel.js
+  employmentModel.js
+  eeoModel.js
+  resumeModel.js
+  stateModel.js
+  userModel.js
+```
+
+### What models do
+
+Models define:
+
+* Table names
+* Column names
+* Data types
+* Required fields
+* Database relationships if configured
+
+Example:
+
+```text
+userModel.js
+```
+
+Represents the users table.
+
+```text
+employeeModel.js
+```
+
+Represents volunteer applicant/application records.
+
+```text
+educationModel.js
+```
+
+Represents education history.
+
+```text
+employmentModel.js
+```
+
+Represents employment history.
+
+```text
+countryModel.js, stateModel.js, cityModel.js
+```
+
+Represent location lookup tables.
+
+---
+
+## `src/repositories/`
+
+The `repositories` folder contains database query logic.
+
+Expected files:
+
+```text
+repositories/
+  application.repository.js
+  location.repository.js
+```
+
+### What repositories do
+
+Repositories should handle direct database operations such as:
+
+* Creating records
+* Reading records
+* Updating records
+* Deleting records
+* Querying lookup tables
+
+The idea is:
+
+```text
+Controller receives request
+↓
+Controller calls repository
+↓
+Repository talks to database
+↓
+Controller sends response
+```
+
+### `application.repository.js`
+
+Handles database operations related to volunteer applications.
+
+Used for:
+
+* Registering/submitting employee/application data
+* Saving applicant-related data
+* Reading application records
+
+### `location.repository.js`
+
+Handles database operations for location data.
+
+Used for:
+
+* Countries
+* States
+* Cities
+* Country phone codes
+
+---
+
+## `src/mappers/`
+
+The `mappers` folder converts data from one shape to another.
+
+Expected file:
+
+```text
+mappers/
+  employee.mapper.js
+```
+
+### What mappers do
+
+Frontend data and database data often do not have the exact same structure.
+
+The mapper helps convert frontend application form data into the format expected by the backend/database.
+
+Example:
+
+```text
+Frontend form payload
+↓
+employee.mapper.js
+↓
+Backend/database-ready object
+```
+
+This keeps transformation logic out of controllers.
+
+---
+
+## `src/services/`
+
+The `services` folder contains business logic or external service integrations.
+
+Expected file:
+
+```text
+services/
+  email.service.js
+```
+
+### `email.service.js`
+
+Handles email-related logic.
+
+Used for:
+
+* Sending confirmation emails
+* Email utility functions
+* Any email integration logic
+
+Services are useful because they keep controllers cleaner.
+
+---
+
+## `src/validators/`
+
+The `validators` folder contains validation logic.
+
+Expected structure:
+
+```text
+validators/
+  legacy.validation.js
+  application/
+    index.js
+    commonValidations.js
+    address/
+    education/
+    employee/
+    employment/
+    eod/
+```
+
+### `validators/application/`
+
+This is the main validation area for volunteer application data.
+
+It validates things like:
+
+* Personal information
+* Address information
+* Education information
+* Employment information
+* EEO information
+
+This validation is used when applicants submit an application.
+
+### `legacy.validation.js`
+
+Older validation helper file.
+
+This may still exist for compatibility. It can be reviewed later to decide whether it should be kept, merged, or removed.
+
+---
+
+## `src/docs/`
+
+The `docs` folder inside the API contains backend API documentation files, especially Swagger/OpenAPI-related files.
+
+Expected structure:
+
+```text
+docs/
+  swagger/
+```
+
+Used by:
+
+```text
+src/config/swagger.js
+```
+
+This allows the backend to serve API documentation.
+
+---
+
+# Root Workspace Setup
+
+This project uses npm workspaces.
+
+The root `package.json` should look similar to this:
+
+```json
+{
+  "name": "keelworks-volunteer-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/applicant-portal",
+    "apps/admin-portal",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace apps/api",
+    "dev:applicant": "npm start --workspace apps/applicant-portal",
+    "dev:admin": "npm start --workspace apps/admin-portal",
+    "build:applicant": "npm run build --workspace apps/applicant-portal",
+    "build:admin": "npm run build --workspace apps/admin-portal"
+  }
+}
+```
+
+Each app still has its own `package.json`.
+
+That is normal and required.
+
+The root manages all workspaces together.
+
+---
+
+# Important Dependency Notes
+
+Keep these:
+
+```text
+package.json
+package-lock.json
+apps/applicant-portal/package.json
+apps/admin-portal/package.json
+apps/api/package.json
+```
+
+Do not commit these:
+
+```text
+node_modules/
+apps/applicant-portal/node_modules/
+apps/admin-portal/node_modules/
+apps/api/node_modules/
+.env
+```
+
+With npm workspaces, install dependencies from the root:
+
+```bash
+npm install
+```
+
+This creates one root-level `node_modules` and one root-level `package-lock.json`.
+
+---
+
+# Prerequisites
+
+Install these before running the project:
 
 * Node.js
 * npm
-* MySQL Server
-* MySQL Workbench
+* MySQL
 * Git
+* VS Code or another editor
 
-## 1. Clone the Repository
+Recommended:
 
-```bash
-git clone <repo-url>
-cd <repo-folder>
+```text
+Node.js 20 LTS or 22 LTS
 ```
 
-## 2. Set Up the MySQL Database
+If you are using a very new Node version and something behaves strangely, try using an LTS version.
 
-Open MySQL Workbench and connect to your local MySQL server.
+---
 
-First, create the database manually:
+# Local Setup Instructions
+
+Follow these steps from the repo root.
+
+## 1. Clone the repository
+
+```bash
+git clone git@github.com:noumaanahmed/KeelworksVolunteerApp.git
+cd KeelworksVolunteerApp
+```
+
+If you already have the project locally, just go to the project root:
+
+```bash
+cd "/Users/noumaanahmed/Downloads/KeelworksVolunteerApp"
+```
+
+---
+
+## 2. Install dependencies
+
+From the repo root:
+
+```bash
+npm install
+```
+
+This installs dependencies for all three workspaces:
+
+```text
+apps/api
+apps/applicant-portal
+apps/admin-portal
+```
+
+Do not run `npm install` separately inside each app unless you specifically need to debug that app.
+
+---
+
+## 3. Create environment files
+
+Create local `.env` files from the examples.
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/applicant-portal/.env.example apps/applicant-portal/.env
+cp apps/admin-portal/.env.example apps/admin-portal/.env
+```
+
+---
+
+## 4. Configure applicant portal environment
+
+Open:
+
+```text
+apps/applicant-portal/.env
+```
+
+Use:
+
+```env
+PORT=3001
+REACT_APP_API_BASE_URL=http://localhost:3000
+```
+
+---
+
+## 5. Configure admin portal environment
+
+Open:
+
+```text
+apps/admin-portal/.env
+```
+
+Use:
+
+```env
+PORT=3002
+REACT_APP_API_BASE_URL=http://localhost:3000
+```
+
+---
+
+## 6. Configure backend environment
+
+Open:
+
+```text
+apps/api/.env
+```
+
+Example:
+
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# MySQL
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DB_NAME=volunteer_management
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=your_mysql_password_here
+
+# Auth
+JWT_SECRET=replace_with_a_long_random_secret
+ADMIN_SIGNUP_SECRET=replace_with_admin_signup_secret
+
+# CORS
+CORS_ORIGIN=http://localhost:3001
+
+# Email confirmation
+EMAIL_USER=your_email@example.com
+EMAIL_APP_PASSWORD=your_email_app_password
+
+# Google Drive / Resume Upload
+GOOGLE_DRIVE_KEY=
+GOOGLE_DRIVE_FOLDER_ID=
+```
+
+Update these values:
+
+```text
+MYSQL_PASSWORD
+JWT_SECRET
+ADMIN_SIGNUP_SECRET
+EMAIL_USER
+EMAIL_APP_PASSWORD
+```
+
+For local testing, email and Google Drive values may be left blank if you are not testing those features.
+
+---
+
+# Database Setup
+
+## 1. Open MySQL
+
+Use MySQL Workbench or the MySQL terminal.
+
+## 2. Create the database
+
+Run:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS volunteer_management;
 USE volunteer_management;
 ```
 
-Then run the SQL setup scripts in this order:
+## 3. Run SQL scripts
+
+SQL scripts are stored in:
+
+```text
+database/sql/
+```
+
+Recommended order:
 
 ```text
 00_RUN_ALL_IN_ORDER.sql
@@ -134,355 +992,339 @@ Then run the SQL setup scripts in this order:
 03_add_interested_role.sql
 ```
 
-If MySQL Workbench gives a safe update error, temporarily disable safe updates by running:
+If MySQL safe update mode blocks a script, temporarily run:
 
 ```sql
 SET SQL_SAFE_UPDATES = 0;
 ```
 
-After running the scripts, you can turn it back on:
+After the script finishes, turn it back on:
 
 ```sql
 SET SQL_SAFE_UPDATES = 1;
 ```
 
-To confirm the setup worked, run:
+---
 
-```sql
-USE volunteer_management;
-SHOW TABLES;
-```
+# Running the Project
 
-You should see tables such as:
+Use three separate terminal tabs.
 
-```text
-users
-Employee
-Address
-Country
-State
-City
-Employment
-Education
-EEOData
-Resume
-```
+---
 
-## 3. Configure Backend Environment Variables
+## Terminal 1: Start the backend API
 
-Go to the backend `src` folder:
+From the repo root:
 
 ```bash
-cd apps/api
+npm run dev:api
 ```
 
-Create a `.env` file:
-
-```bash
-touch .env
-```
-
-Use this template:
-
-```env
-MYSQL_DB_NAME=volunteer_management
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-
-JWT_SECRET=keelworks_jwt_secret_2024
-ADMIN_SIGNUP_SECRET=keelworks-admin-2024
-
-CORS_ORIGIN=http://localhost:3001
-
-EMAIL_USER=
-EMAIL_APP_PASSWORD=
-
-GOOGLE_DRIVE_KEY=
-```
-
-Replace:
-
-```env
-MYSQL_PASSWORD=your_mysql_password
-```
-
-with your actual local MySQL password.
-
-For local testing, email and Google Drive values can be left blank:
-
-```env
-EMAIL_USER=
-EMAIL_APP_PASSWORD=
-GOOGLE_DRIVE_KEY=
-```
-
-Do not commit your real `.env` file to GitHub.
-
-## 4. Start the Backend
-
-From the backend `src` folder:
-
-```bash
-npm install
-npm start
-```
-
-The backend should run on:
+Expected local backend URL:
 
 ```text
 http://localhost:3000
 ```
 
-Expected successful output:
+You should see output showing the backend started and connected to the database.
 
-```text
-Database connection has been established successfully.
-Server running on http://localhost:3000/
-```
+---
 
-## 5. Start the Frontend
+## Terminal 2: Start the applicant portal
 
-Open a new terminal window.
-
-Go to the frontend folder:
+From the repo root:
 
 ```bash
-cd apps/applicant-portal
-npm install
-npm start
+npm run dev:applicant
 ```
 
-The frontend should run on:
+Expected local applicant portal URL:
 
 ```text
 http://localhost:3001
 ```
 
-## 6. Clear Browser Local Storage
+---
 
-Before testing a fresh login session, open the browser console and run:
+## Terminal 3: Start the admin portal
 
-```js
-localStorage.clear();
-location.reload();
+From the repo root:
+
+```bash
+npm run dev:admin
 ```
 
-This clears old login/session data.
-
-## 7. Test the Application
-
-### Applicant Test
-
-1. Open `http://localhost:3001`
-2. Create a new applicant account
-3. Fill out the volunteer application form
-4. Submit the application
-5. Confirm that the backend logs show a successful transaction with `COMMIT`
-
-To verify in MySQL Workbench:
-
-```sql
-USE volunteer_management;
-
-SELECT *
-FROM users;
-
-SELECT *
-FROM Employee;
-```
-
-### Admin Test
-
-1. Sign up as an admin
-2. Use the admin secret key:
+Expected local admin portal URL:
 
 ```text
-keelworks-admin-2024
+http://localhost:3002
 ```
 
-3. Sign in as admin
-4. View submitted applications in the admin dashboard
+---
 
-## Useful Database Queries
+# Quick API Test
 
-Check a user account:
+After starting the backend, test this public route:
 
-```sql
-SELECT *
-FROM users
-WHERE email = 'test@example.com';
+```bash
+curl -i http://localhost:3000/api/v1/apply/countries
 ```
 
-Check a submitted application:
+A successful response should include:
 
-```sql
-SELECT *
-FROM Employee
-WHERE personal_email = 'test@example.com';
+```text
+HTTP/1.1 200 OK
 ```
 
-Check application with address details:
+and JSON country data.
 
-```sql
-SELECT 
-  e.employee_id,
-  e.first_name,
-  e.last_name,
-  e.personal_email,
-  e.interested_role,
-  e.application_status,
-  a.address1,
-  a.address2,
-  a.zip_code,
-  c.city_name,
-  s.state_name,
-  co.country_name
-FROM Employee e
-LEFT JOIN Address a ON e.address_id = a.address_id
-LEFT JOIN City c ON a.city_id = c.city_id
-LEFT JOIN State s ON c.state_id = s.state_id
-LEFT JOIN Country co ON e.country_id = co.country_id
-WHERE e.personal_email = 'test@example.com';
+You can also open this in the browser:
+
+```text
+http://localhost:3000/api/v1/apply/countries
 ```
 
-## Common Issues
+---
 
-### MySQL Error: Unknown database `volunteer_management`
+# Basic Manual Testing Flow
 
-Create the database first:
+## Applicant flow
+
+1. Open:
+
+```text
+http://localhost:3001
+```
+
+2. Sign up or sign in as an applicant.
+3. Start a new application.
+4. Fill out the form.
+5. Submit the application.
+6. Confirm you reach the thank-you/success page.
+
+## Admin flow
+
+1. Open:
+
+```text
+http://localhost:3002
+```
+
+2. Sign in as an admin.
+3. Check whether the submitted application appears in the admin dashboard.
+
+---
+
+# Local Storage Keys
+
+The applicant portal uses:
+
+```text
+kw_volunteer_token
+kw_volunteer_user
+```
+
+The admin portal uses:
+
+```text
+kw_admin_token
+kw_admin_user
+```
+
+If login behaves strangely during local development, clear browser local storage for localhost.
+
+---
+
+# Common Commands
+
+Install all dependencies:
+
+```bash
+npm install
+```
+
+Run backend:
+
+```bash
+npm run dev:api
+```
+
+Run applicant portal:
+
+```bash
+npm run dev:applicant
+```
+
+Run admin portal:
+
+```bash
+npm run dev:admin
+```
+
+Build applicant portal:
+
+```bash
+npm run build:applicant
+```
+
+Build admin portal:
+
+```bash
+npm run build:admin
+```
+
+Check Git status:
+
+```bash
+git status
+```
+
+Commit changes:
+
+```bash
+git add -A
+git commit -m "Your commit message"
+git push
+```
+
+---
+
+# Troubleshooting
+
+## `react-scripts: command not found`
+
+Run from the repo root:
+
+```bash
+npm install
+```
+
+If it still fails:
+
+```bash
+rm -rf node_modules
+rm -f package-lock.json
+npm install
+```
+
+Then try again:
+
+```bash
+npm run dev:applicant
+```
+
+---
+
+## Backend cannot connect to MySQL
+
+Check:
+
+```text
+apps/api/.env
+```
+
+Confirm:
+
+```text
+MYSQL_HOST
+MYSQL_PORT
+MYSQL_DB_NAME
+MYSQL_USERNAME
+MYSQL_PASSWORD
+```
+
+Also make sure MySQL is running and the database exists:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS volunteer_management;
-USE volunteer_management;
 ```
 
-Then rerun the setup scripts.
+---
 
-### MySQL Error: Access denied for user
+## API route returns 404
 
-Check your backend `.env` file:
-
-```env
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=your_actual_mysql_password
-```
-
-Make sure the password matches the password used in MySQL Workbench.
-
-### React Error: `react-scripts: Permission denied`
-
-Reinstall frontend dependencies:
+Confirm the backend is running:
 
 ```bash
-rm -rf node_modules package-lock.json
-npm install
-npm start
+npm run dev:api
 ```
 
-If needed:
+Then test:
 
 ```bash
-chmod +x node_modules/.bin/react-scripts
-npm start
+curl -i http://localhost:3000/api/v1/apply/countries
 ```
 
-### Email not configured
-
-This message is expected if email credentials are blank:
+If this fails, check the route registration in:
 
 ```text
-Email not configured — skipping confirmation email.
+apps/api/src/routes/index.js
+apps/api/src/routes/apply.routes.js
 ```
 
-To enable confirmation emails, configure:
+---
 
-```env
-EMAIL_USER=your_gmail@gmail.com
-EMAIL_APP_PASSWORD=your_16_character_gmail_app_password
-```
+## Port already in use
 
-## Current Architecture
+If port 3000, 3001, or 3002 is already being used, stop the old process or change the relevant `.env` file.
 
-The current application has one frontend and one backend:
+Common ports:
 
 ```text
-React Frontend
-  ↓
-Express Backend API
-  ↓
-MySQL Database
+API:              3000
+Applicant Portal: 3001
+Admin Portal:     3002
 ```
 
-Main flow:
+---
+
+## `.env` changes are not taking effect
+
+Restart the app.
+
+For React frontend `.env` changes, you must stop and restart the dev server.
+
+---
+
+## Old login/session issues
+
+Clear local storage in the browser.
+
+Chrome:
 
 ```text
-User signs up
-  ↓
-Backend stores account in users table
-  ↓
-Applicant submits application
-  ↓
-Backend stores application in Employee, Address, Employment, EEOData, and related tables
-  ↓
-Admin can view submitted applications
+Developer Tools
+Application
+Local Storage
+http://localhost:3001 or http://localhost:3002
+Clear
 ```
 
-## Planned Architecture
+Then refresh and sign in again.
 
-The recommended future architecture is:
+---
 
-```text
-Volunteer Frontend
-  ↓
-Shared Backend API
-  ↓
-Shared MySQL Database
-  ↑
-Admin Frontend
-```
+# Notes for Future Cleanup
 
-This would separate the user experience into:
+The project has already been reorganized into a cleaner monorepo structure.
 
-1. Volunteer Portal
+Future cleanup/fix passes can include:
 
-   * Applicant signup
-   * Application submission
-   * Application status view
+1. Resume upload flow cleanup
+2. Swagger/API docs cleanup
+3. Backend model naming consistency
+4. Better service/repository separation
+5. Better error response standardization
+6. Deployment setup
+7. Testing setup
 
-2. Admin Portal
+---
 
-   * Admin signup/signin
-   * Application review
-   * Approve/reject/review actions
-   * Search/filter/export applications
+# Current Known Notes
 
-## Security Notes
-
-* Do not commit `.env` files.
-* Do not commit database passwords.
-* Do not commit Gmail app passwords.
-* Do not commit JWT secrets.
-* Use `.env.example` for placeholder values only.
-* Admin signup should always require the admin secret key.
-* Admin-only routes should remain protected by JWT and role checks.
-
-## Git Ignore Recommendation
-
-Add a `.gitignore` file with:
-
-```gitignore
-node_modules/
-.env
-.env.local
-.env.production
-.DS_Store
-npm-debug.log
-dist/
-build/
-```
-
-## License
-
-Internal project for KeelWorks volunteer management workflows.
+* Applicant and admin portals are now separated.
+* Backend API is shared by both portals.
+* The project uses npm workspaces.
+* Environment examples should be committed.
+* Real `.env` files should not be committed.
+* Resume upload exists but should be reviewed and fixed later.

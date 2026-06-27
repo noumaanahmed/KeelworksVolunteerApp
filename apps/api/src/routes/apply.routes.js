@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { uploadDocument } from "../controllers/documentController.js";
+import { uploadDocument } from "../controllers/document.controller.js";
 import {
   getCountries,
   getStates,
@@ -8,7 +8,7 @@ import {
   createCity,
   sendConfirmation,
   getMyApplications,
-} from "../controllers/applyController.js";
+} from "../controllers/apply.controller.js";
 import {
   createEmployee,
   errorHandler,
@@ -16,14 +16,11 @@ import {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
-} from "../controllers/employeeController.js";
+} from "../controllers/employee.controller.js";
 import {
-  validateRequestBody,
-  employeeValidationRules,
-  paginationValidationRules,
-  idValidationRules,
-} from "../middleware/validationMiddleware.js";
-import verifyToken, { requireAdmin } from "../middleware/jwtAuthenticationMiddleware.js";
+  validateRequestBody
+} from "../middleware/validation.middleware.js";
+import verifyToken, { requireAdmin } from "../middleware/auth.middleware.js";
 
 const routes = Router();
 
@@ -35,7 +32,7 @@ routes.post("/cities", createCity);
 routes.get("/countryPhoneCodes", getCountryCodes);
 
 // Public - submit application
-routes.post("/employees", validateRequestBody, employeeValidationRules, createEmployee);
+routes.post("/employees", validateRequestBody, createEmployee);
 
 // Public - confirmation email
 routes.post("/send-confirmation-email", sendConfirmation);
@@ -47,10 +44,10 @@ routes.get("/my-applications", verifyToken, getMyApplications);
 routes.post("/upload/", uploadDocument);
 
 // Admin only - view applications
-routes.get("/employees", verifyToken, requireAdmin, paginationValidationRules, getAllEmployees);
-routes.get("/employees/:id", verifyToken, requireAdmin, idValidationRules, getEmployeeById);
-routes.put("/employees/:id", verifyToken, requireAdmin, validateRequestBody, idValidationRules, employeeValidationRules, updateEmployee);
-routes.delete("/employees/:id", verifyToken, requireAdmin, idValidationRules, deleteEmployee);
+routes.get("/employees", verifyToken, requireAdmin, getAllEmployees);
+routes.get("/employees/:id", verifyToken, requireAdmin, getEmployeeById);
+routes.put("/employees/:id", verifyToken, requireAdmin, validateRequestBody, updateEmployee);
+routes.delete("/employees/:id", verifyToken, requireAdmin, deleteEmployee);
 
 routes.use(errorHandler);
 
