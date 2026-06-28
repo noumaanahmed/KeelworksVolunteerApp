@@ -51,7 +51,7 @@ const PersonalInformation = ({ handleNextButton, handleFormChange, initialData =
     const countryObj = countries.find(c => String(c.country_id) === String(personalData.homeCountry));
     if (!countryObj?.country_code) return;
     setStatesLoading(true);
-    fetch(`${API}/api/v1/apply/states/${countryObj.country_code}`)
+    fetch(`${API}/api/v1/locations/states/${countryObj.country_code}`)
       .then(r => r.json())
       .then(d => setStates(d.data || []))
       .catch(() => setStates([]))
@@ -348,12 +348,6 @@ const PersonalInformation = ({ handleNextButton, handleFormChange, initialData =
             <option value="awst">AWST (Australian Western)</option>
           </select>
           {showError("timezone") && <span className="field-error">{errors.timezone}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="profilePicture">Profile picture (optional)</label>
-          <input type="file" id="profilePicture" name="profilePicture" accept="image/png, image/jpeg" onChange={handleChange} />
-          <p className="file-info">Max 2MB — PNG or JPEG</p>
         </div>
 
         <div className="form-group">

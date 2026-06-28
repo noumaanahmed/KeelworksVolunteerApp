@@ -1,0 +1,32 @@
+import {
+  getAdminApplications,
+  getMyApplications,
+  submitApplication,
+} from "../services/applications.service.js";
+import { sendConfirmationEmail } from "../services/email.service.js";
+import { successResponse } from "../utils/api-response.js";
+import { asyncHandler } from "../utils/async-handler.js";
+import { AppError } from "../utils/app-error.js";
+
+export const createApplication = asyncHandler(async (req, res) => {
+  const result = await submitApplication(req.body, req.user);
+  return res.status(201).json(successResponse("Application submitted successfully.", { employee: result }, 201));
+});
+
+export const listMyApplications = asyncHandler(async (req, res) => {
+  const applications = await getMyApplications(req.user);
+  return res.status(200).json(successResponse("Applications retrieved.", { applications }));
+});
+
+export const listAdminApplications = asyncHandler(async (req, res) => {
+  const result = await getAdminApplications(req.query);
+  return res.status(200).json(successResponse("Applications retrieved.", result));
+});
+
+export const sendConfirmation = asyncHandler(async (req, res) => {
+  const { email, name } = req.body;
+  if (!email) throw new AppError("Email is required.", 400, "EMAIL_REQUIRED");
+
+  const result = await sendConfirmationEmail({ email, name });
+  return res.status(200).json(successResponse("Confirmation email processed.", result));
+});

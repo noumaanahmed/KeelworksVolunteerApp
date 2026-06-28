@@ -2,6 +2,14 @@ import React, { useState } from "react";
 
 const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
 
+const getApiErrorMessage = (data) => {
+  if (!data) return "Something went wrong";
+  if (typeof data.message === "string" && data.message) return data.message;
+  if (typeof data.error === "string") return data.error;
+  if (data.error?.code) return data.error.code;
+  return "Something went wrong";
+};
+
 const emptyForm = {
   email: "",
   password: "",
@@ -60,7 +68,7 @@ const AuthPage = ({ onAuthSuccess }) => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(getApiErrorMessage(data));
       }
 
       if (data.data.user.role !== "applicant") {

@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
-import ProfileMenu from "./ProfileMenu";
+import ProfileMenu from "@keelworks/shared-ui/ProfileMenu";
 
 const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+
+const getApiErrorMessage = (data, fallback) => {
+  if (!data) return fallback;
+  if (typeof data.message === "string" && data.message) return data.message;
+  if (typeof data.error === "string") return data.error;
+  if (data.error?.code) return data.error.code;
+  return fallback;
+};
 
 const AdminDashboard = ({ user, token, onSignOut }) => {
   const [applications, setApplications] = useState([]);
@@ -15,15 +23,15 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/api/v1/apply/employees?page=${p}&limit=10`, {
+      const res = await fetch(`${API}/api/v1/applications/admin?page=${p}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (res.ok && data.data) {
-        setApplications(data.data.employees || []);
+        setApplications(data.data.applications || []);
         setPagination(data.data.pagination || {});
       } else {
-        setError(data.error || "Failed to load applications");
+        setError(getApiErrorMessage(data, "Failed to load applications"));
       }
     } catch {
       setError("Network error — is the backend running?");
@@ -42,7 +50,6 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     title: { margin: "0 0 4px", fontSize: "22px" },
     subtitle: { margin: 0, fontSize: "13px", opacity: 0.75 },
     userArea: { display: "flex", alignItems: "center", gap: "12px" },
-    signOutBtn: { padding: "7px 14px", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "6px", color: "#fff", cursor: "pointer", fontSize: "13px" },
     statsBar: { display: "flex", gap: "16px", padding: "20px 32px", background: "#fff", borderBottom: "1px solid #e5e7eb" },
     stat: { display: "flex", flexDirection: "column", alignItems: "center", flex: 1, padding: "12px", background: "#f9fafb", borderRadius: "8px" },
     statNum: { fontSize: "28px", fontWeight: "bold", color: "#1a3c5e" },

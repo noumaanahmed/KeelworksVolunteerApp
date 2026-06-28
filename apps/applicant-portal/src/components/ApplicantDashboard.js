@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
-import ProfileMenu from "./ProfileMenu";
+import ProfileMenu from "@keelworks/shared-ui/ProfileMenu";
 
 const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+
+const getApiErrorMessage = (data, fallback) => {
+  if (!data) return fallback;
+  if (typeof data.message === "string" && data.message) return data.message;
+  if (typeof data.error === "string") return data.error;
+  if (data.error?.code) return data.error.code;
+  return fallback;
+};
 
 const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
   const [applications, setApplications] = useState([]);
@@ -12,14 +20,14 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/api/v1/apply/my-applications`, {
+      const res = await fetch(`${API}/api/v1/applications/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (res.ok && data.data) {
         setApplications(data.data.applications || []);
       } else {
-        setError(data.error || "Failed to load your applications");
+        setError(getApiErrorMessage(data, "Failed to load your applications"));
       }
     } catch {
       setError("Network error — is the backend running?");

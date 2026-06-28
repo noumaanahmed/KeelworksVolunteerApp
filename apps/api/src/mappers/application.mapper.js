@@ -1,0 +1,32 @@
+export const toApplicationSummary = (application) => ({
+  employee_id: application.employee_id,
+  first_name: application.first_name,
+  middle_name: application.middle_name,
+  last_name: application.last_name,
+  interested_role: application.interested_role,
+  application_status: application.application_status,
+  application_date: application.application_date,
+});
+
+export const toAdminApplicationRow = (application) => ({
+  employee_id: application.employee_id,
+  first_name: application.first_name,
+  middle_name: application.middle_name,
+  last_name: application.last_name,
+  personal_email: application.personal_email,
+  phone: application.phone,
+  phonetype: application.phonetype,
+  gender: application.gender,
+  time_zone: application.time_zone,
+  visa_status: application.visa_status,
+  opt_support: application.opt_support,
+  hours_commitment: application.hours_commitment,
+  start_date: application.start_date,
+  application_status: application.application_status,
+  application_date: application.application_date,
+  linkedin_url: application.linkedin_url,
+  additional_websites: application.additional_websites,
+  why_kworks: application.why_kworks,
+  additional_info: application.additional_info,
+  interested_role: application.interested_role,
+});

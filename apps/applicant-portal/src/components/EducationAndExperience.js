@@ -3,14 +3,13 @@ import React, { useState } from 'react';
 const DATE_RE = /^(0[1-9]|1[0-2])\/\d{4}$/;
 
 const EducationAndExperience = ({ handleNextButton, handleBackButton, handleFormChange, initialData }) => {
-    const [additionalInformation, setAdditionalInformation] = useState(initialData.additionalInformation || { linkedinProfile: '', resume: null });
+    const [additionalInformation, setAdditionalInformation] = useState(initialData.additionalInformation || { linkedinProfile: '', additionalWebsite: '' });
     const [experiences, setExperiences] = useState(initialData.experiences || [{}]);
     const [education, setEducation] = useState(initialData.education || [{}]);
-    const [fileName, setFileName] = useState(initialData.additionalInformation?.resume?.name || '');
 
-    // errors shape: { experiences: [{field: msg}], education: [{field: msg}], resume: msg }
-    const [errors, setErrors] = useState({ experiences: [], education: [], resume: '' });
-    const [touched, setTouched] = useState({ experiences: [], education: [], resume: false });
+    // errors shape: { experiences: [{field: msg}], education: [{field: msg}] }
+    const [errors, setErrors] = useState({ experiences: [], education: [] });
+    const [touched, setTouched] = useState({ experiences: [], education: [] });
     const [submitAttempted, setSubmitAttempted] = useState(false);
 
     // Compares two "MM/YYYY" strings. Returns true if `end` is the same month or later than `start`.
@@ -55,27 +54,17 @@ const EducationAndExperience = ({ handleNextButton, handleBackButton, handleForm
         return e;
     };
 
-    const validateResume = () => {
-        if (!fileName && !additionalInformation.resume) return 'Please upload your resume.';
-        return '';
-    };
-
     const validateAll = () => ({
         experiences: experiences.map(validateExperience),
         education: education.map(validateEducation),
-        resume: validateResume(),
     });
 
     const handleChange = (e) => {
-        const { name, value, type, files } = e.target;
+        const { name, value } = e.target;
         const updatedData = {
             ...additionalInformation,
-            [name]: type === 'file' ? files[0] : value,
+            [name]: value,
         };
-        if (type === 'file') {
-            setFileName(files[0].name);
-            setErrors((prev) => ({ ...prev, resume: '' }));
-        }
         setAdditionalInformation((prevData) => {
             const newData = { ...prevData, ...updatedData };
             handleFormChange({ additionalInformation: newData, experiences, education });
@@ -157,8 +146,6 @@ const EducationAndExperience = ({ handleNextButton, handleBackButton, handleForm
     const showEduError = (index, field) =>
         (touched.education[index] || submitAttempted) && errors.education[index]?.[field];
 
-    const showResumeError = (touched.resume || submitAttempted) && errors.resume;
-
     const handleSubmit = (e) => {
         e.preventDefault();
         const allErrors = validateAll();
@@ -167,14 +154,12 @@ const EducationAndExperience = ({ handleNextButton, handleBackButton, handleForm
         setTouched({
             experiences: experiences.map(() => true),
             education: education.map(() => true),
-            resume: true,
         });
 
         const hasExpErrors = allErrors.experiences.some((e) => Object.keys(e).length > 0);
         const hasEduErrors = allErrors.education.some((e) => Object.keys(e).length > 0);
-        const hasResumeError = !!allErrors.resume;
 
-        if (!hasExpErrors && !hasEduErrors && !hasResumeError) {
+        if (!hasExpErrors && !hasEduErrors) {
             handleNextButton();
         } else {
             document.getElementById('education-experience-error-summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -194,7 +179,6 @@ const EducationAndExperience = ({ handleNextButton, handleBackButton, handleForm
                 summaryItems.push(`Education ${i + 1} — ${field}: ${msg}`);
             });
         });
-        if (errors.resume) summaryItems.push(`Resume: ${errors.resume}`);
     }
 
     return (
@@ -404,18 +388,6 @@ const EducationAndExperience = ({ handleNextButton, handleBackButton, handleForm
                 <div className="form-group">
                     <label>Additional website (optional)</label>
                     <input type="text" name="additionalWebsite" value={additionalInformation.additionalWebsite} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                    <label>Resume<span className="requiredLabel">*</span></label>
-                    <input
-                        type="file" name="resume" accept=".pdf, .doc, .docx"
-                        className={showResumeError ? 'input-invalid' : ''}
-                        onChange={handleChange}
-                        onBlur={() => setTouched((prev) => ({ ...prev, resume: true }))}
-                    />
-                    {fileName && <p className="file-info">Uploaded file: {fileName}</p>}
-                    <p className="file-info">File types allowed: PDF, DOC</p>
-                    {showResumeError && <span className="field-error">{errors.resume}</span>}
                 </div>
 
                 {/* Buttons */}

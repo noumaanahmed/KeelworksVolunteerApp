@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { signup, signin, getMe } from "../controllers/auth.controller.js";
-import verifyToken from "../middleware/auth.middleware.js";
+import { getMe, signin, signup } from "../controllers/auth.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
+import { requireJsonBody } from "../middleware/validate-request.middleware.js";
 
-const authRouter = Router();
+const router = Router();
 
-authRouter.post("/signup", signup);
-authRouter.post("/signin", signin);
-authRouter.get("/me", verifyToken, getMe);
+router.post("/signup", requireJsonBody, signup);
+router.post("/signin", requireJsonBody, signin);
+router.get("/me", verifyToken, getMe);
 
-export default authRouter;
+export default router;
