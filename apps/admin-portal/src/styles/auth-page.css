@@ -1,0 +1,137 @@
+.auth-page {
+  align-items: center;
+  background: linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 100%);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 440px;
+  padding: 40px;
+  width: 100%;
+}
+
+.auth-brand {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.auth-brand h2 {
+  color: #1a3c5e;
+  font-size: 28px;
+  margin: 0 0 4px;
+}
+
+.auth-brand p {
+  color: #666666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.auth-heading {
+  color: #1a3c5e;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-row {
+  display: flex;
+  gap: 12px;
+}
+
+.auth-field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-field label {
+  color: #333333;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-field input {
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  outline: none;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.auth-field input:focus {
+  border-color: #2d6a9f;
+  box-shadow: 0 0 0 3px rgba(45, 106, 159, 0.15);
+}
+
+.auth-hint {
+  color: #888888;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.auth-error {
+  background: #fff0f0;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+  color: #cc0000;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.auth-submit {
+  background: #1a3c5e;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 4px;
+  padding: 12px;
+}
+
+.auth-submit:disabled {
+  background: #aaaaaa;
+  cursor: not-allowed;
+}
+
+.auth-footer {
+  color: #666666;
+  font-size: 13px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.auth-link {
+  color: #2d6a9f;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+@media (max-width: 540px) {
+  .auth-card {
+    padding: 28px;
+  }
+
+  .auth-row {
+    flex-direction: column;
+  }
+}

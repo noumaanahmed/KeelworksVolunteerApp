@@ -7,6 +7,7 @@ import Employee from "./employee.model.js";
 import Education from "./education.model.js";
 import Employment from "./employment.model.js";
 import EEOData from "./eeo-data.model.js";
+import ApplicationStatusHistory from "./application-status-history.model.js";
 
 User.hasMany(Employee, { foreignKey: "user_id" });
 Employee.belongsTo(User, { foreignKey: "user_id" });
@@ -33,6 +34,21 @@ Employment.belongsTo(Employee, { foreignKey: "employee_id" });
 Employee.hasOne(EEOData, { foreignKey: "employee_id" });
 EEOData.belongsTo(Employee, { foreignKey: "employee_id" });
 
+Employee.hasMany(ApplicationStatusHistory, {
+  foreignKey: "employee_id",
+  as: "status_history",
+});
+ApplicationStatusHistory.belongsTo(Employee, { foreignKey: "employee_id" });
+
+User.hasMany(ApplicationStatusHistory, {
+  foreignKey: "changed_by_user_id",
+  as: "status_changes",
+});
+ApplicationStatusHistory.belongsTo(User, {
+  foreignKey: "changed_by_user_id",
+  as: "changed_by",
+});
+
 export {
   User,
   Country,
@@ -43,4 +59,5 @@ export {
   Education,
   Employment,
   EEOData,
+  ApplicationStatusHistory,
 };

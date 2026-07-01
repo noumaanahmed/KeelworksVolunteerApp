@@ -3,6 +3,7 @@ import { db } from "../config/database.js";
 import User from "./user.model.js";
 import Address from "./address.model.js";
 import Country from "./country.model.js";
+import { APPLICATION_STATUS } from "../constants/application-status.js";
 
 const Employee = db.define("Employee", {
   employee_id: {
@@ -110,9 +111,9 @@ const Employee = db.define("Employee", {
     allowNull: false,
   },
   application_status: {
-    type: DataTypes.ENUM("Pending", "Reviewing", "Approved", "Rejected"),
+    type: DataTypes.ENUM(...Object.values(APPLICATION_STATUS)),
     allowNull: false,
-    defaultValue: "Pending",
+    defaultValue: APPLICATION_STATUS.SUBMITTED,
   },
   application_date: {
     type: DataTypes.DATE,

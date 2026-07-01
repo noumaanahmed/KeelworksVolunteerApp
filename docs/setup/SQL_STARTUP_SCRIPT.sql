@@ -14,7 +14,10 @@
 --   - States/provinces for US, Canada, India, UK, Australia
 --   - "Not Applicable / Other" state for every other country so the
 --     required State/Province field always has a selectable value
---   - No old/future tables: Resume, Role, application_status_history
+--   - ApplicationStatusHistory table for admin workflow audit trail
+--   - Admin workflow statuses supported from day one
+--   - application_status stored as VARCHAR(50) for future workflow flexibility
+--   - No old/future tables: Resume, Role
 --
 -- Run this whole file in MySQL Workbench or mysql CLI.
 -- ============================================================
@@ -27,6 +30,7 @@ USE volunteer_management;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS ApplicationStatusHistory;
 DROP TABLE IF EXISTS application_status_history;
 DROP TABLE IF EXISTS Resume;
 DROP TABLE IF EXISTS Role;
@@ -141,7 +145,7 @@ CREATE TABLE Employee (
   interested_role     VARCHAR(255) NULL,
   time_zone           VARCHAR(255) NULL,
   visa_status         VARCHAR(100) NOT NULL,
-  application_status  ENUM('Pending', 'Reviewing', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
+  application_status  VARCHAR(50) NOT NULL DEFAULT 'submitted',
   application_date    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   is_active           BOOLEAN NOT NULL DEFAULT TRUE,
   additional_websites VARCHAR(255) NULL,
@@ -207,6 +211,44 @@ CREATE TABLE EEOData (
     ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX idx_eeo_employee (employee_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE ApplicationStatusHistory (
+  history_id          INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id         INT NOT NULL,
+  previous_status     VARCHAR(50) NULL,
+  new_status          VARCHAR(50) NOT NULL,
+  note                TEXT NULL,
+  forwarded_to        VARCHAR(255) NULL,
+  action_label        VARCHAR(100) NULL,
+  changed_by_user_id  INT NULL,
+  created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_status_history_employee
+    FOREIGN KEY (employee_id) REFERENCES Employee(employee_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_status_history_user
+    FOREIGN KEY (changed_by_user_id) REFERENCES users(user_id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX idx_status_history_employee (employee_id),
+  INDEX idx_status_history_status (new_status),
+  INDEX idx_status_history_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- Supported admin application workflow statuses
+-- ============================================================
+-- The backend controls valid transitions. The DB uses VARCHAR(50)
+-- instead of ENUM so future workflow steps can be added without
+-- risky ALTER TABLE enum migrations.
+--
+-- Current supported statuses:
+--   submitted
+--   under_review
+--   forwarded
+--   accepted
+--   on_hold
+--   declined
+--   acceptance_email_sent
+--   awaiting_intro_response
 
 -- ============================================================
 -- Seed countries for the applicant Home Country dropdown
@@ -616,7 +658,8 @@ SELECT
   (SELECT COUNT(*) FROM State) AS states_seeded,
   (SELECT COUNT(*) FROM City) AS cities_seeded_initially,
   (SELECT COUNT(*) FROM users) AS users_after_reset,
-  (SELECT COUNT(*) FROM Employee) AS applications_after_reset;
+  (SELECT COUNT(*) FROM Employee) AS applications_after_reset,
+  (SELECT COUNT(*) FROM ApplicationStatusHistory) AS status_history_rows_after_reset;
 
 SELECT 'Country dropdown check' AS check_name, country_id, country_name, country_code
 FROM Country

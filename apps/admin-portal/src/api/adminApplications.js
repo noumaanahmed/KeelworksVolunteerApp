@@ -1,0 +1,52 @@
+const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+
+export const getApiErrorMessage = (data, fallback = "Something went wrong") => {
+  if (!data) return fallback;
+  if (typeof data.message === "string" && data.message) return data.message;
+  if (typeof data.error === "string") return data.error;
+  if (data.error?.code) return data.error.code;
+  return fallback;
+};
+
+const parseResponse = async (response, fallbackMessage) => {
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(data, fallbackMessage));
+  }
+  return data?.data || null;
+};
+
+export const fetchAdminApplications = async ({ token, page = 1, limit = 10 }) => {
+  const response = await fetch(`${API}/api/v1/applications/admin?page=${page}&limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return parseResponse(response, "Failed to load applications");
+};
+
+export const fetchAdminApplicationDetail = async ({ token, employeeId }) => {
+  const response = await fetch(`${API}/api/v1/applications/admin/${employeeId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const data = await parseResponse(response, "Failed to load application details");
+  return data?.application || null;
+};
+
+export const updateApplicationStatus = async ({ token, employeeId, status, note, forwardedTo }) => {
+  const response = await fetch(`${API}/api/v1/applications/admin/${employeeId}/status`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      status,
+      note,
+      forwarded_to: forwardedTo,
+    }),
+  });
+
+  const data = await parseResponse(response, "Failed to update application status");
+  return data?.application || null;
+};

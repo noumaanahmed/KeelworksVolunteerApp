@@ -1,13 +1,25 @@
 import { AppError } from "../utils/app-error.js";
 import {
   createApplication,
+  findAdminApplicationById,
   findApplicationByEmail,
   findApplicationsByUserId,
   listApplications,
+  updateApplicationStatus as updateApplicationStatusRecord,
 } from "../repositories/applications.repository.js";
 import { assertLocationReferencesExist } from "./locations.service.js";
 import { validateApplicationPayload, validatePagination } from "../validators/application.validator.js";
-import { toAdminApplicationRow, toApplicationSummary } from "../mappers/application.mapper.js";
+import {
+  toAdminApplicationDetail,
+  toAdminApplicationRow,
+  toApplicationSummary,
+} from "../mappers/application.mapper.js";
+import {
+  APPLICATION_STATUS_LABELS,
+  getAllowedTransitions,
+  getStatusActions,
+  isKnownApplicationStatus,
+} from "../constants/application-status.js";
 
 const duplicateMessage = (field) => {
   const labels = {
@@ -16,6 +28,12 @@ const duplicateMessage = (field) => {
     linkedin_url: "This LinkedIn URL",
   };
   return `${labels[field] || "This value"} is already associated with an existing application.`;
+};
+
+const normalizeNote = (value) => {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed || null;
 };
 
 export const submitApplication = async (payload, authenticatedUser) => {
@@ -65,4 +83,65 @@ export const getAdminApplications = async (query) => {
       per_page: limit,
     },
   };
+};
+
+export const getAdminApplicationDetail = async (employeeId) => {
+  const id = Number(employeeId);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new AppError("Application id must be a positive number.", 400, "INVALID_APPLICATION_ID");
+  }
+
+  const application = await findAdminApplicationById(id);
+  if (!application) {
+    throw new AppError("Application not found.", 404, "APPLICATION_NOT_FOUND");
+  }
+
+  return toAdminApplicationDetail(application);
+};
+
+export const changeAdminApplicationStatus = async ({ employeeId, payload, authenticatedUser }) => {
+  const id = Number(employeeId);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new AppError("Application id must be a positive number.", 400, "INVALID_APPLICATION_ID");
+  }
+
+  const nextStatus = String(payload?.status || "").trim();
+  if (!isKnownApplicationStatus(nextStatus)) {
+    throw new AppError("Unknown application status.", 400, "INVALID_APPLICATION_STATUS", { status: nextStatus });
+  }
+
+  const currentApplication = await findAdminApplicationById(id);
+  if (!currentApplication) {
+    throw new AppError("Application not found.", 404, "APPLICATION_NOT_FOUND");
+  }
+
+  const currentStatus = currentApplication.application_status;
+  const allowedTransitions = getAllowedTransitions(currentStatus);
+
+  if (!allowedTransitions.includes(nextStatus)) {
+    throw new AppError(
+      `Cannot move application from ${APPLICATION_STATUS_LABELS[currentStatus] || currentStatus} to ${APPLICATION_STATUS_LABELS[nextStatus] || nextStatus}.`,
+      400,
+      "INVALID_STATUS_TRANSITION",
+      { current_status: currentStatus, requested_status: nextStatus, allowed_transitions: allowedTransitions }
+    );
+  }
+
+  const action = getStatusActions(currentStatus).find((item) => item.next_status === nextStatus);
+  const forwardedTo = normalizeNote(payload?.forwarded_to);
+
+  if (action?.requires_forwarded_to && !forwardedTo) {
+    throw new AppError("Forwarded applications require a lead email or lead name.", 400, "FORWARDED_TO_REQUIRED");
+  }
+
+  await updateApplicationStatusRecord({
+    employeeId: id,
+    newStatus: nextStatus,
+    note: normalizeNote(payload?.note),
+    forwardedTo,
+    actionLabel: action?.label || APPLICATION_STATUS_LABELS[nextStatus] || nextStatus,
+    changedByUserId: authenticatedUser?.user_id || null,
+  });
+
+  return getAdminApplicationDetail(id);
 };

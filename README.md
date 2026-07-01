@@ -27,7 +27,10 @@ A professionalized MVP for the KeelWorks volunteer application workflow. The rep
 - Admin account sign-up and sign-in
 - Admin-only dashboard
 - Paginated application list
-- Basic application details modal
+- Full application details modal
+- Controlled application status workflow
+- Status action buttons based on the current application state
+- Internal notes and status history timeline
 
 ### Backend API
 
@@ -40,7 +43,39 @@ A professionalized MVP for the KeelWorks volunteer application workflow. The rep
 - Transaction-based application creation
 - Application ownership through `users.user_id -> Employee.user_id`
 - EEO record linked to the submitted application through `EEOData.employee_id`
+- Admin status transitions with audit history through `ApplicationStatusHistory`
 
+
+## Admin Application Workflow
+
+The admin portal now supports a controlled status flow for the early onboarding decision process:
+
+```text
+submitted
+  -> under_review
+  -> accepted
+  -> forwarded
+  -> on_hold
+  -> declined
+
+accepted
+  -> acceptance_email_sent
+  -> awaiting_intro_response
+
+forwarded
+  -> accepted
+  -> on_hold
+  -> declined
+```
+
+Admins should open an application from the dashboard, review the full details, select one of the available next actions, and optionally add an internal note. The backend validates transitions so an application cannot jump to an invalid status. Each change is recorded in `ApplicationStatusHistory`.
+
+The app does not send Gmail templates automatically yet. For accepted, forwarded, on-hold, and declined actions, admins should still send the matching Gmail template manually, then mark the status in the portal.
+
+### SQL files
+
+- `docs/setup/SQL_STARTUP_SCRIPT.sql` is the full first-time/reset setup script. It wipes and recreates the MVP schema, including `ApplicationStatusHistory`.
+- `docs/setup/01_add_admin_status_workflow.sql` is a migration for an existing professional MVP database when you do not want to wipe current data.
 
 ## Project Structure
 
@@ -344,7 +379,7 @@ Admin sign-up requires `admin_secret` matching `ADMIN_SIGNUP_SECRET`.
 - Keep controllers thin.
 - Put business workflows in services.
 - Put database access in repositories.
-- Add database columns to `docs/setup/00_RUN_ALL_IN_ORDER.sql` when adding persisted fields.
+- Add database columns to `docs/setup/SQL_STARTUP_SCRIPT.sql` when adding persisted fields.
 - Add a new endpoint only when it is connected end-to-end from frontend to backend to database.
 
 ## Recommended Next Features

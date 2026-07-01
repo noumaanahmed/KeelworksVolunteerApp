@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "../styles/auth-page.css";
 
 const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
 
@@ -31,45 +32,39 @@ const AuthPage = ({ onAuthSuccess }) => {
     setForm(emptyForm);
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setForm({ ...form, [event.target.name]: event.target.value });
     setError("");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError("");
 
-    const endpoint =
-      mode === "signin" ? "/api/v1/auth/signin" : "/api/v1/auth/signup";
-
-    const body =
-      mode === "signin"
-        ? {
-            email: form.email,
-            password: form.password,
-          }
-        : {
-            email: form.email,
-            password: form.password,
-            first_name: form.first_name,
-            middle_name: form.middle_name,
-            last_name: form.last_name,
-            role: "admin",
-            admin_secret: form.admin_secret,
-          };
+    const endpoint = mode === "signin" ? "/api/v1/auth/signin" : "/api/v1/auth/signup";
+    const body = mode === "signin"
+      ? { email: form.email, password: form.password }
+      : {
+          email: form.email,
+          password: form.password,
+          first_name: form.first_name,
+          middle_name: form.middle_name,
+          last_name: form.last_name,
+          role: "admin",
+          admin_secret: form.admin_secret,
+        };
 
     try {
-      const res = await fetch(`${API}${endpoint}`, {
+      const response = await fetch(`${API}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error(getApiErrorMessage(data));
       }
 
@@ -85,149 +80,25 @@ const AuthPage = ({ onAuthSuccess }) => {
     }
   };
 
-  const s = {
-    overlay: {
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px",
-    },
-    card: {
-      background: "#fff",
-      borderRadius: "12px",
-      padding: "40px",
-      width: "100%",
-      maxWidth: "440px",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-    },
-    logoArea: {
-      textAlign: "center",
-      marginBottom: "24px",
-    },
-    logo: {
-      color: "#1a3c5e",
-      margin: "0 0 4px",
-      fontSize: "28px",
-      fontWeight: "bold",
-    },
-    tagline: {
-      color: "#666",
-      margin: 0,
-      fontSize: "14px",
-    },
-    heading: {
-      textAlign: "center",
-      color: "#1a3c5e",
-      fontSize: "18px",
-      fontWeight: "600",
-      margin: "0 0 20px",
-    },
-    form: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "16px",
-    },
-    row: {
-      display: "flex",
-      gap: "12px",
-    },
-    field: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "6px",
-      flex: 1,
-    },
-    label: {
-      fontSize: "13px",
-      fontWeight: "600",
-      color: "#333",
-    },
-    input: {
-      padding: "10px 12px",
-      border: "1px solid #ddd",
-      borderRadius: "6px",
-      fontSize: "14px",
-      outline: "none",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    hint: {
-      color: "#888",
-      fontSize: "11px",
-      marginTop: "2px",
-    },
-    error: {
-      background: "#fff0f0",
-      border: "1px solid #ffcccc",
-      color: "#cc0000",
-      padding: "10px 12px",
-      borderRadius: "6px",
-      fontSize: "13px",
-    },
-    btn: {
-      padding: "12px",
-      background: "#1a3c5e",
-      color: "#fff",
-      border: "none",
-      borderRadius: "6px",
-      fontSize: "15px",
-      fontWeight: "600",
-      cursor: "pointer",
-      marginTop: "4px",
-    },
-    btnDisabled: {
-      padding: "12px",
-      background: "#aaa",
-      color: "#fff",
-      border: "none",
-      borderRadius: "6px",
-      fontSize: "15px",
-      cursor: "not-allowed",
-      marginTop: "4px",
-    },
-    footer: {
-      textAlign: "center",
-      marginTop: "16px",
-      fontSize: "13px",
-      color: "#666",
-    },
-    link: {
-      color: "#2d6a9f",
-      cursor: "pointer",
-      fontWeight: "600",
-      textDecoration: "underline",
-    },
-    backLink: {
-      color: "#2d6a9f",
-      cursor: "pointer",
-      fontWeight: "600",
-      textDecoration: "underline",
-      fontSize: "13px",
-    },
-  };
-
   return (
-    <div style={s.overlay}>
-      <div style={s.card}>
-        <div style={s.logoArea}>
-          <h2 style={s.logo}>KeelWorks</h2>
-          <p style={s.tagline}>Admin Management Portal</p>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <h2>KeelWorks</h2>
+          <p>Admin Management Portal</p>
         </div>
 
-        <h3 style={s.heading}>
+        <h3 className="auth-heading">
           {mode === "signin" ? "Admin Sign In" : "Create Admin Account"}
         </h3>
 
-        <form onSubmit={handleSubmit} style={s.form}>
+        <form className="auth-form" onSubmit={handleSubmit}>
           {mode === "signup" && (
             <>
-              <div style={s.row}>
-                <div style={s.field}>
-                  <label style={s.label}>First Name *</label>
+              <div className="auth-row">
+                <div className="auth-field">
+                  <label>First Name *</label>
                   <input
-                    style={s.input}
                     name="first_name"
                     value={form.first_name}
                     onChange={handleChange}
@@ -236,10 +107,9 @@ const AuthPage = ({ onAuthSuccess }) => {
                   />
                 </div>
 
-                <div style={s.field}>
-                  <label style={s.label}>Middle Name</label>
+                <div className="auth-field">
+                  <label>Middle Name</label>
                   <input
-                    style={s.input}
                     name="middle_name"
                     value={form.middle_name}
                     onChange={handleChange}
@@ -248,10 +118,9 @@ const AuthPage = ({ onAuthSuccess }) => {
                 </div>
               </div>
 
-              <div style={s.field}>
-                <label style={s.label}>Last Name *</label>
+              <div className="auth-field">
+                <label>Last Name *</label>
                 <input
-                  style={s.input}
                   name="last_name"
                   value={form.last_name}
                   onChange={handleChange}
@@ -262,10 +131,9 @@ const AuthPage = ({ onAuthSuccess }) => {
             </>
           )}
 
-          <div style={s.field}>
-            <label style={s.label}>Email Address *</label>
+          <div className="auth-field">
+            <label>Email Address *</label>
             <input
-              style={s.input}
               type="email"
               name="email"
               value={form.email}
@@ -275,10 +143,9 @@ const AuthPage = ({ onAuthSuccess }) => {
             />
           </div>
 
-          <div style={s.field}>
-            <label style={s.label}>Password *</label>
+          <div className="auth-field">
+            <label>Password *</label>
             <input
-              style={s.input}
               type="password"
               name="password"
               value={form.password}
@@ -290,10 +157,9 @@ const AuthPage = ({ onAuthSuccess }) => {
           </div>
 
           {mode === "signup" && (
-            <div style={s.field}>
-              <label style={s.label}>Admin Secret Key *</label>
+            <div className="auth-field">
+              <label>Admin Secret Key *</label>
               <input
-                style={s.input}
                 type="password"
                 name="admin_secret"
                 value={form.admin_secret}
@@ -301,39 +167,25 @@ const AuthPage = ({ onAuthSuccess }) => {
                 placeholder="Contact your administrator"
                 required
               />
-              <small style={s.hint}>
-                Required to create an admin account.
-              </small>
+              <small className="auth-hint">Required to create an admin account.</small>
             </div>
           )}
 
-          {error && <div style={s.error}>{error}</div>}
+          {error && <div className="auth-error">{error}</div>}
 
-          <button
-            type="submit"
-            style={loading ? s.btnDisabled : s.btn}
-            disabled={loading}
-          >
-            {loading
-              ? "Please wait..."
-              : mode === "signin"
-              ? "Sign In"
-              : "Create Admin Account"}
+          <button className="auth-submit" type="submit" disabled={loading}>
+            {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Admin Account"}
           </button>
         </form>
 
-        <p style={s.footer}>
+        <p className="auth-footer">
           {mode === "signin" ? (
             <>
               Need an admin account?{" "}
-              <span style={s.link} onClick={() => switchMode("signup")}>
-                Create one
-              </span>
+              <span className="auth-link" onClick={() => switchMode("signup")}>Create one</span>
             </>
           ) : (
-            <span style={s.backLink} onClick={() => switchMode("signin")}>
-              Back to Admin Sign In
-            </span>
+            <span className="auth-link" onClick={() => switchMode("signin")}>Back to Admin Sign In</span>
           )}
         </p>
       </div>

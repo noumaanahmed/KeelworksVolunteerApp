@@ -1,4 +1,6 @@
 import {
+  changeAdminApplicationStatus,
+  getAdminApplicationDetail,
   getAdminApplications,
   getMyApplications,
   submitApplication,
@@ -21,6 +23,21 @@ export const listMyApplications = asyncHandler(async (req, res) => {
 export const listAdminApplications = asyncHandler(async (req, res) => {
   const result = await getAdminApplications(req.query);
   return res.status(200).json(successResponse("Applications retrieved.", result));
+});
+
+export const getAdminApplication = asyncHandler(async (req, res) => {
+  const application = await getAdminApplicationDetail(req.params.employeeId);
+  return res.status(200).json(successResponse("Application retrieved.", { application }));
+});
+
+export const updateAdminApplicationStatus = asyncHandler(async (req, res) => {
+  const application = await changeAdminApplicationStatus({
+    employeeId: req.params.employeeId,
+    payload: req.body,
+    authenticatedUser: req.user,
+  });
+
+  return res.status(200).json(successResponse("Application status updated.", { application }));
 });
 
 export const sendConfirmation = asyncHandler(async (req, res) => {

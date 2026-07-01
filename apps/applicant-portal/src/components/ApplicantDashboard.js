@@ -38,7 +38,27 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
 
   useEffect(() => { fetchMyApplications(); }, [fetchMyApplications]);
 
-  const statusColor = (s) => ({ Pending: "#f59e0b", Reviewing: "#3b82f6", Approved: "#10b981", Rejected: "#ef4444" }[s] || "#888");
+  const statusLabels = {
+    submitted: "Submitted",
+    under_review: "Under Review",
+    forwarded: "Forwarded to Lead",
+    accepted: "Accepted",
+    on_hold: "On Hold",
+    declined: "Declined",
+    acceptance_email_sent: "Acceptance Email Sent",
+    awaiting_intro_response: "Awaiting Intro Response",
+  };
+
+  const statusColor = (s) => ({
+    submitted: "#d97706",
+    under_review: "#2563eb",
+    forwarded: "#7c3aed",
+    accepted: "#059669",
+    on_hold: "#f59e0b",
+    declined: "#dc2626",
+    acceptance_email_sent: "#0f766e",
+    awaiting_intro_response: "#475569",
+  }[s] || "#888");
 
   const s = {
     page: { minHeight: "100vh", background: "#f3f4f6", fontFamily: "Arial, sans-serif" },
@@ -95,7 +115,7 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
                     </span>
                   </div>
                   <span style={{ ...s.badge, background: statusColor(app.application_status) }}>
-                    {app.application_status}
+                    {app.application_status_label || statusLabels[app.application_status] || app.application_status}
                   </span>
                 </div>
               ))}
