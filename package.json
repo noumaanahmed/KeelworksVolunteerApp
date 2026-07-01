@@ -16,6 +16,14 @@
     "build:admin": "npm run build --workspace apps/admin-portal",
     "check:api": "npm run check --workspace apps/api",
     "check": "npm run check:api",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "start:api": "npm run start --workspace apps/api",
+    "build:applicant:netlify": "npm run build:applicant",
+    "build:admin:netlify": "npm run build:admin",
+    "deploy:check": "npm run check:api && npm run build:applicant && npm run build:admin"
+  },
+  "engines": {
+    "node": ">=20 <23",
+    "npm": ">=9"
   }
 }

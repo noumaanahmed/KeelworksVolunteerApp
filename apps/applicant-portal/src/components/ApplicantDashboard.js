@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ProfileMenu from "@keelworks/shared-ui/ProfileMenu";
 
-const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 const getApiErrorMessage = (data, fallback) => {
   if (!data) return fallback;
@@ -20,7 +20,7 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/api/v1/applications/me`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/applications/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();

@@ -1,17 +1,21 @@
 import { Sequelize } from "sequelize";
 import { env } from "./env.js";
 
-export const db = new Sequelize(
-  env.database.name,
-  env.database.user,
-  env.database.password,
-  {
-    host: env.database.host,
-    port: env.database.port,
-    dialect: "mysql",
-    logging: env.nodeEnv === "development" ? false : false,
-  }
-);
+const commonOptions = {
+  dialect: "mysql",
+  logging: false,
+  dialectOptions: {
+    decimalNumbers: true,
+  },
+};
+
+export const db = env.database.url
+  ? new Sequelize(env.database.url, commonOptions)
+  : new Sequelize(env.database.name, env.database.user, env.database.password, {
+      ...commonOptions,
+      host: env.database.host,
+      port: env.database.port,
+    });
 
 export const testDatabaseConnection = async () => {
   await db.authenticate();

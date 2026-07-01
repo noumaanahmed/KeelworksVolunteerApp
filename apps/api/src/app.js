@@ -34,6 +34,14 @@ if (env.nodeEnv !== "production") {
   });
 }
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "KeelWorks Volunteer API",
+    health: "/health",
+  });
+});
+
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });

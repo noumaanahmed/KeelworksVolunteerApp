@@ -12,7 +12,7 @@ import ThankYouPage from "./components/ThankYouPage";
 import ProfileMenu from "@keelworks/shared-ui/ProfileMenu";
 import HeaderBackgroundImage from "./Assets/nav_background1.jpg";
 
-const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+import { API_BASE_URL } from "./config/api";
 
 // Applicant-side views
 const VIEW_DASHBOARD = "dashboard";
@@ -79,7 +79,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API}/api/v1/locations/countries`)
+    fetch(`${API_BASE_URL}/api/v1/locations/countries`)
       .then((res) => res.json())
       .then((data) => {
         if (data && data.data) setCountries(data.data);
@@ -155,7 +155,7 @@ export default function App() {
     if (!stateId || !trimmed) return null;
 
     try {
-      const citiesRes = await fetch(`${API}/api/v1/locations/cities/${stateId}`);
+      const citiesRes = await fetch(`${API_BASE_URL}/api/v1/locations/cities/${stateId}`);
 
       if (citiesRes.ok) {
         const citiesJson = await citiesRes.json();
@@ -170,7 +170,7 @@ export default function App() {
     }
 
     try {
-      const createRes = await fetch(`${API}/api/v1/locations/cities/resolve`, {
+      const createRes = await fetch(`${API_BASE_URL}/api/v1/locations/cities/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state_id: stateId, city_name: trimmed }),
@@ -292,7 +292,7 @@ export default function App() {
     const payload = buildApplicationPayload(finalData, cityId);
 
     try {
-      const res = await fetch(`${API}/api/v1/applications`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -348,7 +348,7 @@ export default function App() {
 
     if (email) {
       try {
-        await fetch(`${API}/api/v1/applications/confirmation-email`, {
+        await fetch(`${API_BASE_URL}/api/v1/applications/confirmation-email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

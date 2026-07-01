@@ -2,6 +2,11 @@
 
 A professionalized MVP for the KeelWorks volunteer application workflow. The repository is an npm-workspaces monorepo with two React portals and one Express/MySQL API.
 
+This version is ready for both local development and public deployment:
+
+- Local: React portals + Express API + local MySQL
+- Public: two Netlify frontend sites + Railway Express API + Railway MySQL
+
 ## Workspaces
 
 | Workspace | Purpose | Default Port |
@@ -74,7 +79,9 @@ The app does not send Gmail templates automatically yet. For accepted, forwarded
 
 ### SQL files
 
-- `docs/setup/SQL_STARTUP_SCRIPT.sql` is the full first-time/reset setup script. It wipes and recreates the MVP schema, including `ApplicationStatusHistory`.
+- `docs/setup/00_RUN_ALL_IN_ORDER.sql` is the main local first-time/reset setup script.
+- `docs/setup/SQL_STARTUP_SCRIPT.sql` is kept as a descriptive copy of the same full reset setup.
+- `docs/setup/SQL_STARTUP_SCRIPT_HOSTED.sql` is the hosted-database version for Railway or another managed MySQL database where you select the database/schema before running the script.
 - `docs/setup/01_add_admin_status_workflow.sql` is a migration for an existing professional MVP database when you do not want to wipe current data.
 
 ## Project Structure
@@ -85,6 +92,8 @@ KeelworksVolunteerApp/
     applicant-portal/
       src/
         components/
+        config/
+          api.js
         styles/
           app.css
           auth-page.css
@@ -95,7 +104,10 @@ KeelworksVolunteerApp/
 
     admin-portal/
       src/
+        api/
         components/
+        config/
+          api.js
         styles/
           admin-dashboard.css
           auth-page.css
@@ -154,10 +166,20 @@ KeelworksVolunteerApp/
         ProfileMenu.js
       package.json
 
+  deploy/
+    railway-api.env.example
+    netlify-applicant.env.example
+    netlify-admin.env.example
+
   docs/
+    deployment/
+      NETLIFY_RAILWAY_DEPLOYMENT.md
     setup/
       00_RUN_ALL_IN_ORDER.sql
+      SQL_STARTUP_SCRIPT.sql
+      SQL_STARTUP_SCRIPT_HOSTED.sql
 
+  railway.json
   package.json
   README.md
 ```
@@ -291,10 +313,18 @@ Email settings are optional. If Gmail credentials are not configured, confirmati
 SQL setup is kept in:
 
 ```text
-docs/setup/SQL_STARTUP_SCRIPT.sql
+docs/setup/00_RUN_ALL_IN_ORDER.sql
 ```
 
-Run this script in MySQL Workbench or your MySQL client. It creates the active MVP tables and seeds country/state data.
+Run this script in MySQL Workbench or your MySQL client for local first-time setup. It wipes and recreates the active MVP tables and seeds country/state data.
+
+For Railway or another hosted MySQL database, use:
+
+```text
+docs/setup/SQL_STARTUP_SCRIPT_HOSTED.sql
+```
+
+Select the hosted database/schema as the default schema in MySQL Workbench before running the hosted script.
 
 The active MVP tables are:
 
@@ -307,6 +337,7 @@ The active MVP tables are:
 - `Education`
 - `Employment`
 - `EEOData`
+- `ApplicationStatusHistory`
 
 ## Install Dependencies
 
@@ -365,6 +396,46 @@ npm run build:applicant
 npm run build:admin
 ```
 
+## Public Deployment
+
+The project is prepared for two separate Netlify frontend sites and one Railway backend/database stack.
+
+Recommended setup:
+
+```text
+Netlify site 1: Applicant portal
+  Build command: npm run build:applicant
+  Publish directory: apps/applicant-portal/build
+
+Netlify site 2: Admin portal
+  Build command: npm run build:admin
+  Publish directory: apps/admin-portal/build
+
+Railway service 1: Express API
+  Start command: npm run start:api
+
+Railway service 2: MySQL database
+  Run docs/setup/SQL_STARTUP_SCRIPT_HOSTED.sql once from MySQL Workbench
+```
+
+Both Netlify sites should use the same environment variable:
+
+```env
+REACT_APP_API_BASE_URL=https://your-railway-api.up.railway.app
+```
+
+The Railway API should allow both Netlify origins:
+
+```env
+CORS_ORIGIN=https://your-applicant-site.netlify.app,https://your-admin-site.netlify.app
+```
+
+Full instructions are in:
+
+```text
+docs/deployment/NETLIFY_RAILWAY_DEPLOYMENT.md
+```
+
 ## API Endpoints
 
 ### Auth
@@ -407,9 +478,9 @@ Admin sign-up requires `admin_secret` matching `ADMIN_SIGNUP_SECRET`.
 
 ## Recommended Next Features
 
-1. Add admin application detail endpoint that joins address, education, employment, and EEO data.
-2. Add application status update workflow and a deliberate `application_status_history` table.
-3. Rebuild resume upload using a clear multipart endpoint and database-backed file metadata.
-4. Add automated tests for auth, validation, and application submission.
-5. Reintroduce Swagger/OpenAPI after the endpoint design stabilizes.
-6. Move repeated frontend API handling into shared helpers when frontend features grow.
+1. Add automated tests for auth, validation, application submission, and admin status updates.
+2. Add admin due dates/reminders for forwarded candidates and accepted candidates awaiting intro scheduling.
+3. Add manual email template helper panels for Accepted, Forwarded, On Hold, and Declined workflows.
+4. Add intro-meeting and participation-agreement tracking after `awaiting_intro_response`.
+5. Rebuild resume upload using a clear multipart endpoint and database-backed file metadata.
+6. Reintroduce Swagger/OpenAPI after the endpoint design stabilizes.

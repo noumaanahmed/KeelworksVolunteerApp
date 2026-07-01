@@ -10,7 +10,7 @@ import {
 } from "mdb-react-ui-kit";
 import "../styles/auth-page.css";
 
-const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 const getApiErrorMessage = (data) => {
   if (!data) return "Something went wrong";
@@ -65,7 +65,7 @@ const AuthPage = ({ onAuthSuccess }) => {
         };
 
     try {
-      const response = await fetch(`${API}${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

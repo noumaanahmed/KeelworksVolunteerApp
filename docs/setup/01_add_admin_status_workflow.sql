@@ -1,73 +1,38 @@
 -- ============================================================
 -- KeelWorks Admin Status Workflow Migration
--- Run this if you already have the professional MVP schema and do not
--- want to wipe existing data. For a full reset, run SQL_STARTUP_SCRIPT.sql.
+-- Run this only if you already have the professional MVP schema
+-- and do not want to wipe existing data.
+--
+-- For a full reset, run docs/setup/00_RUN_ALL_IN_ORDER.sql.
 -- ============================================================
 
 USE volunteer_management;
 
--- Temporarily allow both old and new status values so existing rows can be converted safely.
+SET SQL_SAFE_UPDATES = 0;
+
 ALTER TABLE Employee
-  MODIFY application_status ENUM(
-    'Pending',
-    'Reviewing',
-    'Approved',
-    'Rejected',
-    'submitted',
-    'under_review',
-    'forwarded',
-    'accepted',
-    'on_hold',
-    'declined',
-    'acceptance_email_sent',
-    'awaiting_intro_response'
-  ) NOT NULL DEFAULT 'submitted';
+  MODIFY COLUMN application_status VARCHAR(50) NOT NULL DEFAULT 'submitted';
 
 UPDATE Employee
-SET application_status = CASE application_status
-  WHEN 'Pending' THEN 'submitted'
-  WHEN 'Reviewing' THEN 'under_review'
-  WHEN 'Approved' THEN 'accepted'
-  WHEN 'Rejected' THEN 'declined'
-  ELSE application_status
-END;
-
--- Finalize the enum after old values have been converted.
-ALTER TABLE Employee
-  MODIFY application_status ENUM(
-    'submitted',
-    'under_review',
-    'forwarded',
-    'accepted',
-    'on_hold',
-    'declined',
-    'acceptance_email_sent',
-    'awaiting_intro_response'
-  ) NOT NULL DEFAULT 'submitted';
+SET application_status = CASE
+  WHEN application_status IS NULL OR TRIM(application_status) = '' THEN 'submitted'
+  WHEN LOWER(TRIM(application_status)) IN ('pending', 'new', 'submitted') THEN 'submitted'
+  WHEN LOWER(TRIM(application_status)) IN ('reviewing', 'review', 'in review', 'under review', 'under_review') THEN 'under_review'
+  WHEN LOWER(TRIM(application_status)) IN ('forwarded', 'forward') THEN 'forwarded'
+  WHEN LOWER(TRIM(application_status)) IN ('approved', 'accepted', 'accept') THEN 'accepted'
+  WHEN LOWER(TRIM(application_status)) IN ('on hold', 'on_hold', 'hold') THEN 'on_hold'
+  WHEN LOWER(TRIM(application_status)) IN ('rejected', 'declined', 'reject') THEN 'declined'
+  WHEN LOWER(TRIM(application_status)) IN ('acceptance_email_sent', 'acceptance email sent') THEN 'acceptance_email_sent'
+  WHEN LOWER(TRIM(application_status)) IN ('awaiting_intro_response', 'awaiting intro response') THEN 'awaiting_intro_response'
+  ELSE 'submitted'
+END
+WHERE employee_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS ApplicationStatusHistory (
   history_id          INT AUTO_INCREMENT PRIMARY KEY,
   employee_id         INT NOT NULL,
-  previous_status     ENUM(
-                        'submitted',
-                        'under_review',
-                        'forwarded',
-                        'accepted',
-                        'on_hold',
-                        'declined',
-                        'acceptance_email_sent',
-                        'awaiting_intro_response'
-                      ) NULL,
-  new_status          ENUM(
-                        'submitted',
-                        'under_review',
-                        'forwarded',
-                        'accepted',
-                        'on_hold',
-                        'declined',
-                        'acceptance_email_sent',
-                        'awaiting_intro_response'
-                      ) NOT NULL,
+  previous_status     VARCHAR(50) NULL,
+  new_status          VARCHAR(50) NOT NULL,
   note                TEXT NULL,
   forwarded_to        VARCHAR(255) NULL,
   action_label        VARCHAR(100) NULL,
@@ -107,3 +72,5 @@ WHERE NOT EXISTS (
   FROM ApplicationStatusHistory h
   WHERE h.employee_id = e.employee_id
 );
+
+SET SQL_SAFE_UPDATES = 1;

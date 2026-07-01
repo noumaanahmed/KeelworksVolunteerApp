@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 const FIELD_LABELS = {
   firstName: "First name",
@@ -51,7 +51,7 @@ const PersonalInformation = ({ handleNextButton, handleFormChange, initialData =
     const countryObj = countries.find(c => String(c.country_id) === String(personalData.homeCountry));
     if (!countryObj?.country_code) return;
     setStatesLoading(true);
-    fetch(`${API}/api/v1/locations/states/${countryObj.country_code}`)
+    fetch(`${API_BASE_URL}/api/v1/locations/states/${countryObj.country_code}`)
       .then(r => r.json())
       .then(d => setStates(d.data || []))
       .catch(() => setStates([]))

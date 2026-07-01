@@ -1,4 +1,4 @@
-const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+import { API_BASE_URL } from "../config/api";
 
 export const getApiErrorMessage = (data, fallback = "Something went wrong") => {
   if (!data) return fallback;
@@ -17,7 +17,7 @@ const parseResponse = async (response, fallbackMessage) => {
 };
 
 export const fetchAdminApplications = async ({ token, page = 1, limit = 10 }) => {
-  const response = await fetch(`${API}/api/v1/applications/admin?page=${page}&limit=${limit}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/applications/admin?page=${page}&limit=${limit}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -25,7 +25,7 @@ export const fetchAdminApplications = async ({ token, page = 1, limit = 10 }) =>
 };
 
 export const fetchAdminApplicationDetail = async ({ token, employeeId }) => {
-  const response = await fetch(`${API}/api/v1/applications/admin/${employeeId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/applications/admin/${employeeId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -34,7 +34,7 @@ export const fetchAdminApplicationDetail = async ({ token, employeeId }) => {
 };
 
 export const updateApplicationStatus = async ({ token, employeeId, status, note, forwardedTo }) => {
-  const response = await fetch(`${API}/api/v1/applications/admin/${employeeId}/status`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/applications/admin/${employeeId}/status`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
