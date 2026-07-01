@@ -7,6 +7,7 @@ import {
 } from "../api/adminApplications";
 import { APPLICATION_STATUS, statusClassName, statusLabel } from "../constants/applicationStatus";
 import ApplicationDetailModal from "./ApplicationDetailModal";
+import { createAdminSocket } from "../services/socket";
 import "../styles/admin-dashboard.css";
 
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : "—";
@@ -41,6 +42,56 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
   useEffect(() => {
     fetchApplications(page);
   }, [page, fetchApplications]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const socket = createAdminSocket(token);
+
+    socket.on("application:created", ({ application }) => {
+      setApplications((currentApplications) => {
+        if (!application) return currentApplications;
+
+        const alreadyExists = currentApplications.some(
+          (item) => item.employee_id === application.employee_id
+        );
+
+        if (alreadyExists) return currentApplications;
+        if (page !== 1) return currentApplications;
+
+        return [application, ...currentApplications].slice(0, 10);
+      });
+
+      setPagination((currentPagination) => ({
+        ...currentPagination,
+        total: (currentPagination.total || 0) + 1,
+      }));
+    });
+
+    socket.on("application:statusUpdated", ({ application }) => {
+      if (!application) return;
+
+      setApplications((currentApplications) =>
+        currentApplications.map((item) =>
+          item.employee_id === application.employee_id ? application : item
+        )
+      );
+
+      setSelectedApplication((currentSelectedApplication) =>
+        currentSelectedApplication?.employee_id === application.employee_id
+          ? application
+          : currentSelectedApplication
+      );
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Admin realtime connection failed:", error.message);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [token, page]);
 
   const stats = useMemo(() => ({
     total: pagination.total || 0,

@@ -7,6 +7,7 @@ export const toStatusDisplay = (status) => ({
 
 export const toApplicationSummary = (application) => ({
   employee_id: application.employee_id,
+  user_id: application.user_id,
   first_name: application.first_name,
   middle_name: application.middle_name,
   last_name: application.last_name,
@@ -18,6 +19,7 @@ export const toApplicationSummary = (application) => ({
 
 export const toAdminApplicationRow = (application) => ({
   employee_id: application.employee_id,
+  user_id: application.user_id,
   first_name: application.first_name,
   middle_name: application.middle_name,
   last_name: application.last_name,

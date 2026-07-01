@@ -15,6 +15,7 @@ import { APPLICATION_STATUS } from "../constants/application-status.js";
 
 const applicationListAttributes = [
   "employee_id",
+  "user_id",
   "first_name",
   "middle_name",
   "last_name",

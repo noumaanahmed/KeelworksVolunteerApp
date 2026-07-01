@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import ProfileMenu from "@keelworks/shared-ui/ProfileMenu";
 
 import { API_BASE_URL } from "../config/api";
+import { createApplicantSocket } from "../services/socket";
 
 const getApiErrorMessage = (data, fallback) => {
   if (!data) return fallback;
@@ -37,6 +38,36 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
   }, [token]);
 
   useEffect(() => { fetchMyApplications(); }, [fetchMyApplications]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const socket = createApplicantSocket(token);
+
+    socket.on("application:statusUpdated", ({ application }) => {
+      if (!application) return;
+
+      setApplications((currentApplications) =>
+        currentApplications.map((item) =>
+          item.employee_id === application.employee_id
+            ? {
+                ...item,
+                application_status: application.application_status,
+                application_status_label: application.application_status_label,
+              }
+            : item
+        )
+      );
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Applicant realtime connection failed:", error.message);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [token]);
 
   const statusLabels = {
     submitted: "Submitted",
