@@ -1,20 +1,17 @@
 # Netlify + Railway Deployment Guide
 
-This project is designed to run in two modes:
+This project can run locally or as a public deployment.
 
-1. **Local development**
-   - Applicant portal: `http://localhost:3001`
-   - Admin portal: `http://localhost:3002`
-   - API: `http://localhost:3000`
-   - MySQL: local MySQL
+## Target deployment
 
-2. **Public deployment**
-   - Applicant portal: Netlify site 1
-   - Admin portal: Netlify site 2
-   - API: Railway Node/Express service
-   - Database: Railway MySQL service
+```text
+Applicant portal: Netlify site 1
+Admin portal: Netlify site 2
+API: Railway Node/Express service
+Database: Railway MySQL service
+```
 
-Use one shared API and one shared MySQL database for both portals. The applicant portal writes applications, and the admin portal reads/manages those same applications.
+Both frontend sites use the same Railway API. The API uses one shared MySQL database, so applicants and admins see the same application data.
 
 ---
 
@@ -34,10 +31,10 @@ Install dependencies:
 npm install
 ```
 
-Run the local SQL setup script in MySQL Workbench:
+Run the local database setup/reset script in MySQL Workbench:
 
 ```text
-docs/setup/00_RUN_ALL_IN_ORDER.sql
+docs/setup/SQL_SETUP_SCRIPT.sql
 ```
 
 Start local services:
@@ -54,17 +51,25 @@ npm run dev:admin
 
 Create a Railway project and add a MySQL database.
 
-In Railway, open the MySQL service and copy the connection details. You can connect from MySQL Workbench using the public TCP proxy values shown in Railway.
+In Railway, open the MySQL service and copy the connection details. You can connect from MySQL Workbench using the public TCP proxy values shown by Railway.
 
-For a hosted Railway database, use this SQL file:
+Use the same setup script:
 
 ```text
-docs/setup/SQL_STARTUP_SCRIPT_HOSTED.sql
+docs/setup/SQL_SETUP_SCRIPT.sql
 ```
 
-Before running it, select the Railway database/schema as the default schema in MySQL Workbench. You usually do not need to create a separate `volunteer_management` database on Railway.
+Important: the script creates/uses `volunteer_management` by default. If Railway gives you a fixed database name such as `railway`, update the top of the script before running it:
 
-Run the script once during setup. Run it again only if you intentionally want to wipe the hosted data and reset the schema.
+```sql
+CREATE DATABASE IF NOT EXISTS railway
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE railway;
+```
+
+Run the script once during hosted database setup. Run it again only when you intentionally want to wipe the hosted data and reset the schema.
 
 ---
 
@@ -80,13 +85,17 @@ Start command: npm run start:api
 Root directory: /
 ```
 
-This repo also includes `railway.json`, which tells Railway to start the backend with:
+This repo also includes `railway.json`, which starts the backend with:
 
 ```bash
 npm run start:api
 ```
 
-Set the API service variables using `deploy/railway-api.env.example` as the template.
+Set API service variables using:
+
+```text
+deploy/railway-api.env.example
+```
 
 Minimum required API variables:
 
@@ -120,7 +129,7 @@ curl https://your-railway-api.up.railway.app/api/v1/locations/countries
 
 ## 4. Applicant Netlify site
 
-Create a Netlify site from this same GitHub repo.
+Create a Netlify site from this GitHub repo.
 
 Settings:
 
@@ -178,7 +187,7 @@ After both Netlify sites exist, update the Railway API service variable:
 CORS_ORIGIN=https://keelworks-applicant.netlify.app,https://keelworks-admin.netlify.app
 ```
 
-Redeploy/restart the Railway API.
+Redeploy or restart the Railway API.
 
 ---
 
@@ -201,5 +210,5 @@ Redeploy/restart the Railway API.
 
 - Do not commit real `.env` files.
 - Do not share `MYSQLPASSWORD`, `DATABASE_URL`, `JWT_SECRET`, or `ADMIN_SIGNUP_SECRET`.
-- The SQL setup script is not run automatically on deploy. Run it manually once in MySQL Workbench.
+- The SQL setup script is not run automatically on deploy. Run `docs/setup/SQL_SETUP_SCRIPT.sql` manually once in MySQL Workbench.
 - Future code pushes redeploy the Netlify sites and Railway API, but they do not wipe the database.
