@@ -44,20 +44,13 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
 
     const socket = createApplicantSocket(token);
 
-    socket.on("application:statusUpdated", ({ application }) => {
-      if (!application) return;
+    socket.on("connect", () => {
+      console.log("Applicant realtime connected:", socket.id);
+    });
 
-      setApplications((currentApplications) =>
-        currentApplications.map((item) =>
-          item.employee_id === application.employee_id
-            ? {
-                ...item,
-                application_status: application.application_status,
-                application_status_label: application.application_status_label,
-              }
-            : item
-        )
-      );
+    socket.on("application:statusUpdated", async () => {
+      console.log("Realtime event received: application status updated");
+      await fetchMyApplications();
     });
 
     socket.on("connect_error", (error) => {
@@ -67,7 +60,7 @@ const ApplicantDashboard = ({ user, token, onSignOut, onStartApplication }) => {
     return () => {
       socket.disconnect();
     };
-  }, [token]);
+  }, [token, fetchMyApplications]);
 
   const statusLabels = {
     submitted: "Submitted",

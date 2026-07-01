@@ -48,34 +48,20 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
 
     const socket = createAdminSocket(token);
 
-    socket.on("application:created", ({ application }) => {
-      setApplications((currentApplications) => {
-        if (!application) return currentApplications;
-
-        const alreadyExists = currentApplications.some(
-          (item) => item.employee_id === application.employee_id
-        );
-
-        if (alreadyExists) return currentApplications;
-        if (page !== 1) return currentApplications;
-
-        return [application, ...currentApplications].slice(0, 10);
-      });
-
-      setPagination((currentPagination) => ({
-        ...currentPagination,
-        total: (currentPagination.total || 0) + 1,
-      }));
+    socket.on("connect", () => {
+      console.log("Admin realtime connected:", socket.id);
     });
 
-    socket.on("application:statusUpdated", ({ application }) => {
-      if (!application) return;
+    socket.on("application:created", async () => {
+      console.log("Realtime event received: application created");
+      await fetchApplications(page);
+    });
 
-      setApplications((currentApplications) =>
-        currentApplications.map((item) =>
-          item.employee_id === application.employee_id ? application : item
-        )
-      );
+    socket.on("application:statusUpdated", async ({ application }) => {
+      console.log("Realtime event received: application status updated");
+      await fetchApplications(page);
+
+      if (!application) return;
 
       setSelectedApplication((currentSelectedApplication) =>
         currentSelectedApplication?.employee_id === application.employee_id
@@ -91,7 +77,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     return () => {
       socket.disconnect();
     };
-  }, [token, page]);
+  }, [token, page, fetchApplications]);
 
   const stats = useMemo(() => ({
     total: pagination.total || 0,
