@@ -1,4 +1,14 @@
 import React, { useState } from "react";
+import {
+  MDBBtn,
+  MDBContainer,
+  MDBRow,
+  MDBCol,
+  MDBCard,
+  MDBCardBody,
+  MDBInput,
+} from "mdb-react-ui-kit";
+import "../styles/auth-page.css";
 
 const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
 
@@ -30,44 +40,41 @@ const AuthPage = ({ onAuthSuccess }) => {
     setForm(emptyForm);
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setForm({ ...form, [event.target.name]: event.target.value });
     setError("");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError("");
 
-    const endpoint =
-      mode === "signin" ? "/api/v1/auth/signin" : "/api/v1/auth/signup";
-
-    const body =
-      mode === "signin"
-        ? {
-            email: form.email,
-            password: form.password,
-          }
-        : {
-            email: form.email,
-            password: form.password,
-            first_name: form.first_name,
-            middle_name: form.middle_name,
-            last_name: form.last_name,
-            role: "applicant",
-          };
+    const endpoint = mode === "signin" ? "/api/v1/auth/signin" : "/api/v1/auth/signup";
+    const body = mode === "signin"
+      ? {
+          email: form.email,
+          password: form.password,
+        }
+      : {
+          email: form.email,
+          password: form.password,
+          first_name: form.first_name,
+          middle_name: form.middle_name,
+          last_name: form.last_name,
+          role: "applicant",
+        };
 
     try {
-      const res = await fetch(`${API}${endpoint}`, {
+      const response = await fetch(`${API}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error(getApiErrorMessage(data));
       }
 
@@ -88,238 +95,143 @@ const AuthPage = ({ onAuthSuccess }) => {
     }
   };
 
-  const s = {
-    overlay: {
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px",
-    },
-    card: {
-      background: "#fff",
-      borderRadius: "12px",
-      padding: "40px",
-      width: "100%",
-      maxWidth: "440px",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-    },
-    logoArea: {
-      textAlign: "center",
-      marginBottom: "24px",
-    },
-    logo: {
-      color: "#1a3c5e",
-      margin: "0 0 4px",
-      fontSize: "28px",
-      fontWeight: "bold",
-    },
-    tagline: {
-      color: "#666",
-      margin: 0,
-      fontSize: "14px",
-    },
-    heading: {
-      textAlign: "center",
-      color: "#1a3c5e",
-      fontSize: "18px",
-      fontWeight: "600",
-      margin: "0 0 20px",
-    },
-    form: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "16px",
-    },
-    row: {
-      display: "flex",
-      gap: "12px",
-    },
-    field: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "6px",
-      flex: 1,
-    },
-    label: {
-      fontSize: "13px",
-      fontWeight: "600",
-      color: "#333",
-    },
-    input: {
-      padding: "10px 12px",
-      border: "1px solid #ddd",
-      borderRadius: "6px",
-      fontSize: "14px",
-      outline: "none",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    error: {
-      background: "#fff0f0",
-      border: "1px solid #ffcccc",
-      color: "#cc0000",
-      padding: "10px 12px",
-      borderRadius: "6px",
-      fontSize: "13px",
-    },
-    btn: {
-      padding: "12px",
-      background: "#1a3c5e",
-      color: "#fff",
-      border: "none",
-      borderRadius: "6px",
-      fontSize: "15px",
-      fontWeight: "600",
-      cursor: "pointer",
-      marginTop: "4px",
-    },
-    btnDisabled: {
-      padding: "12px",
-      background: "#aaa",
-      color: "#fff",
-      border: "none",
-      borderRadius: "6px",
-      fontSize: "15px",
-      cursor: "not-allowed",
-      marginTop: "4px",
-    },
-    footer: {
-      textAlign: "center",
-      marginTop: "16px",
-      fontSize: "13px",
-      color: "#666",
-    },
-    link: {
-      color: "#2d6a9f",
-      cursor: "pointer",
-      fontWeight: "600",
-      textDecoration: "underline",
-    },
-    backLink: {
-      color: "#2d6a9f",
-      cursor: "pointer",
-      fontWeight: "600",
-      textDecoration: "underline",
-      fontSize: "13px",
-    },
-  };
-
   return (
-    <div style={s.overlay}>
-      <div style={s.card}>
-        <div style={s.logoArea}>
-          <h2 style={s.logo}>KeelWorks</h2>
-          <p style={s.tagline}>Volunteer Applicant Portal</p>
-        </div>
+    <MDBContainer fluid className="p-4 kw-auth-page kw-auth-gradient overflow-hidden">
+      <MDBRow className="align-items-center min-vh-100">
+        <MDBCol
+          md="6"
+          className="text-center text-md-start d-flex flex-column justify-content-center"
+        >
+          <h1 className="my-5 display-3 fw-bold ls-tight px-3 kw-auth-title">
+            KeelWorks Volunteer <br />
+            <span className="kw-auth-title-highlight">Applicant Portal</span>
+          </h1>
 
-        <h3 style={s.heading}>
-          {mode === "signin"
-            ? "Volunteer Applicant Sign In"
-            : "Create Volunteer Applicant Account"}
-        </h3>
+          <p className="px-3 kw-auth-description">
+            Apply to volunteer with The KeelWorks Foundation, track your application,
+            and continue your onboarding journey from one place.
+          </p>
+        </MDBCol>
 
-        <form onSubmit={handleSubmit} style={s.form}>
-          {mode === "signup" && (
-            <>
-              <div style={s.row}>
-                <div style={s.field}>
-                  <label style={s.label}>First Name *</label>
-                  <input
-                    style={s.input}
-                    name="first_name"
-                    value={form.first_name}
-                    onChange={handleChange}
-                    placeholder="Jane"
-                    required
-                  />
-                </div>
+        <MDBCol md="6" className="position-relative">
+          <div className="position-absolute rounded-circle shadow-5-strong kw-auth-shape-1" />
+          <div className="position-absolute shadow-5-strong kw-auth-shape-2" />
 
-                <div style={s.field}>
-                  <label style={s.label}>Middle Name</label>
-                  <input
-                    style={s.input}
-                    name="middle_name"
-                    value={form.middle_name}
-                    onChange={handleChange}
-                    placeholder="Optional"
-                  />
-                </div>
+          <MDBCard className="my-5 kw-auth-glass">
+            <MDBCardBody className="p-5">
+              <div className="text-center mb-4">
+                <h2 className="fw-bold mb-1 kw-auth-card-title">KeelWorks</h2>
+                <p className="text-muted mb-0">
+                  {mode === "signin"
+                    ? "Sign in to your applicant account"
+                    : "Create your applicant account"}
+                </p>
               </div>
 
-              <div style={s.field}>
-                <label style={s.label}>Last Name *</label>
-                <input
-                  style={s.input}
-                  name="last_name"
-                  value={form.last_name}
+              <form onSubmit={handleSubmit}>
+                {mode === "signup" && (
+                  <>
+                    <MDBRow>
+                      <MDBCol md="6">
+                        <MDBInput
+                          wrapperClass="mb-4"
+                          label="First name"
+                          name="first_name"
+                          type="text"
+                          value={form.first_name}
+                          onChange={handleChange}
+                          required
+                        />
+                      </MDBCol>
+
+                      <MDBCol md="6">
+                        <MDBInput
+                          wrapperClass="mb-4"
+                          label="Middle name"
+                          name="middle_name"
+                          type="text"
+                          value={form.middle_name}
+                          onChange={handleChange}
+                        />
+                      </MDBCol>
+                    </MDBRow>
+
+                    <MDBInput
+                      wrapperClass="mb-4"
+                      label="Last name"
+                      name="last_name"
+                      type="text"
+                      value={form.last_name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </>
+                )}
+
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="Email address"
+                  name="email"
+                  type="email"
+                  value={form.email}
                   onChange={handleChange}
-                  placeholder="Doe"
                   required
                 />
+
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                />
+
+                {error && <div className="kw-auth-error">{error}</div>}
+
+                <MDBBtn
+                  className="w-100 mb-4 kw-auth-submit"
+                  size="md"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Please wait..."
+                    : mode === "signin"
+                    ? "Sign In"
+                    : "Create Applicant Account"}
+                </MDBBtn>
+              </form>
+
+              <div className="kw-auth-switch">
+                {mode === "signin" ? (
+                  <>
+                    New volunteer applicant?{" "}
+                    <button
+                      type="button"
+                      className="kw-auth-link"
+                      onClick={() => switchMode("signup")}
+                    >
+                      Create an account
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="kw-auth-link"
+                    onClick={() => switchMode("signin")}
+                  >
+                    Back to sign in
+                  </button>
+                )}
               </div>
-            </>
-          )}
-
-          <div style={s.field}>
-            <label style={s.label}>Email Address *</label>
-            <input
-              style={s.input}
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div style={s.field}>
-            <label style={s.label}>Password *</label>
-            <input
-              style={s.input}
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
-          </div>
-
-          {error && <div style={s.error}>{error}</div>}
-
-          <button
-            type="submit"
-            style={loading ? s.btnDisabled : s.btn}
-            disabled={loading}
-          >
-            {loading
-              ? "Please wait..."
-              : mode === "signin"
-              ? "Sign In"
-              : "Create Volunteer Applicant Account"}
-          </button>
-        </form>
-
-        <p style={s.footer}>
-          {mode === "signin" ? (
-            <>
-              New volunteer applicant?{" "}
-              <span style={s.link} onClick={() => switchMode("signup")}>
-                Create an account
-              </span>
-            </>
-          ) : (
-            <span style={s.backLink} onClick={() => switchMode("signin")}>
-              Back to Sign In
-            </span>
-          )}
-        </p>
-      </div>
-    </div>
+            </MDBCardBody>
+          </MDBCard>
+        </MDBCol>
+      </MDBRow>
+    </MDBContainer>
   );
 };
 

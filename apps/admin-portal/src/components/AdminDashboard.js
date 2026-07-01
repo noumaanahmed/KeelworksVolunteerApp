@@ -117,7 +117,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
         {error && <div className="error-banner">{error}</div>}
 
         <section className="applications-card">
-          <div className="card-header">
+          <div className="admin-card-header">
             <div>
               <h2>Applications</h2>
               <p>Review submissions and move candidates through the onboarding decision workflow.</p>

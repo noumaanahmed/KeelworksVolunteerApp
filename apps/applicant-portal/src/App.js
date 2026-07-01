@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./App.css";
+import "./styles/app.css";
 import VerticalStepper from "./components/VerticalStepper";
 import PersonalInformation from "./components/PersonalInformation";
 import EducationAndExperience from "./components/EducationAndExperience";

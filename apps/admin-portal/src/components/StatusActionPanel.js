@@ -6,7 +6,12 @@ const StatusActionPanel = ({ application, onStatusChange, busy }) => {
   const [note, setNote] = useState("");
   const [forwardedTo, setForwardedTo] = useState("");
 
-  const nextActions = application?.next_actions || EMPTY_ACTIONS;;
+  const rawNextActions = application?.next_actions;
+  const nextActions = useMemo(
+    () => rawNextActions || EMPTY_ACTIONS,
+    [rawNextActions]
+  );
+
   const selectedAction = useMemo(
     () => nextActions.find((action) => action.next_status === selectedStatus),
     [nextActions, selectedStatus]

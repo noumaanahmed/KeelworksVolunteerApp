@@ -81,18 +81,18 @@
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
 }
 
-.card-header {
+.admin-card-header {
   padding: 20px 22px;
   border-bottom: 1px solid var(--kw-border);
 }
 
-.card-header h2,
+.admin-card-header h2,
 .detail-section h3 {
   color: var(--kw-blue-800);
   margin: 0 0 6px;
 }
 
-.card-header p,
+.admin-card-header p,
 .workflow-helper-text {
   margin: 0;
   color: var(--kw-muted);
@@ -221,7 +221,7 @@
   padding: 12px 14px;
 }
 
-.modal-overlay {
+.kw-modal-overlay {
   align-items: center;
   background: rgba(15, 23, 42, 0.55);
   display: flex;
@@ -232,7 +232,7 @@
   z-index: 1000;
 }
 
-.modal {
+.kw-modal {
   background: #ffffff;
   border-radius: 14px;
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.35);
@@ -243,7 +243,7 @@
   width: min(1060px, 100%);
 }
 
-.modal-header {
+.kw-modal-header {
   align-items: center;
   background: var(--kw-blue-800);
   color: #ffffff;
@@ -253,12 +253,12 @@
   padding: 18px 22px;
 }
 
-.modal-header h2 {
+.kw-modal-header h2 {
   margin: 0 0 4px;
   font-size: 20px;
 }
 
-.modal-header p {
+.kw-modal-header p {
   color: rgba(255, 255, 255, 0.78);
   margin: 0;
 }
@@ -271,7 +271,7 @@
   font-size: 20px;
 }
 
-.modal-body {
+.kw-modal-body {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -467,7 +467,7 @@
     grid-template-columns: 1fr;
   }
 
-  .modal-overlay {
+  .kw-modal-overlay {
     padding: 12px;
   }
 }

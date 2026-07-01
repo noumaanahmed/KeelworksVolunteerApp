@@ -1,4 +1,13 @@
 import React, { useState } from "react";
+import {
+  MDBBtn,
+  MDBContainer,
+  MDBRow,
+  MDBCol,
+  MDBCard,
+  MDBCardBody,
+  MDBInput,
+} from "mdb-react-ui-kit";
 import "../styles/auth-page.css";
 
 const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
@@ -81,115 +90,159 @@ const AuthPage = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <h2>KeelWorks</h2>
-          <p>Admin Management Portal</p>
-        </div>
+    <MDBContainer fluid className="p-4 kw-auth-page kw-auth-gradient overflow-hidden">
+      <MDBRow className="align-items-center min-vh-100">
+        <MDBCol
+          md="6"
+          className="text-center text-md-start d-flex flex-column justify-content-center"
+        >
+          <h1 className="my-5 display-3 fw-bold ls-tight px-3 kw-auth-title">
+            KeelWorks Admin <br />
+            <span className="kw-auth-title-highlight">Onboarding Portal</span>
+          </h1>
 
-        <h3 className="auth-heading">
-          {mode === "signin" ? "Admin Sign In" : "Create Admin Account"}
-        </h3>
+          <p className="px-3 kw-auth-description">
+            Review volunteer applications, manage onboarding decisions, track status
+            changes, and move applicants through the KeelWorks onboarding workflow.
+          </p>
+        </MDBCol>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {mode === "signup" && (
-            <>
-              <div className="auth-row">
-                <div className="auth-field">
-                  <label>First Name *</label>
-                  <input
-                    name="first_name"
-                    value={form.first_name}
-                    onChange={handleChange}
-                    placeholder="Jane"
-                    required
-                  />
-                </div>
+        <MDBCol md="6" className="position-relative">
+          <div className="position-absolute rounded-circle shadow-5-strong kw-auth-shape-1" />
+          <div className="position-absolute shadow-5-strong kw-auth-shape-2" />
 
-                <div className="auth-field">
-                  <label>Middle Name</label>
-                  <input
-                    name="middle_name"
-                    value={form.middle_name}
-                    onChange={handleChange}
-                    placeholder="Optional"
-                  />
-                </div>
+          <MDBCard className="my-5 kw-auth-glass">
+            <MDBCardBody className="p-5">
+              <div className="text-center mb-4">
+                <h2 className="fw-bold mb-1 kw-auth-card-title">KeelWorks</h2>
+                <p className="text-muted mb-0">
+                  {mode === "signin"
+                    ? "Sign in to the admin portal"
+                    : "Create an admin account"}
+                </p>
               </div>
 
-              <div className="auth-field">
-                <label>Last Name *</label>
-                <input
-                  name="last_name"
-                  value={form.last_name}
+              <form onSubmit={handleSubmit}>
+                {mode === "signup" && (
+                  <>
+                    <MDBRow>
+                      <MDBCol md="6">
+                        <MDBInput
+                          wrapperClass="mb-4"
+                          label="First name"
+                          name="first_name"
+                          type="text"
+                          value={form.first_name}
+                          onChange={handleChange}
+                          required
+                        />
+                      </MDBCol>
+
+                      <MDBCol md="6">
+                        <MDBInput
+                          wrapperClass="mb-4"
+                          label="Middle name"
+                          name="middle_name"
+                          type="text"
+                          value={form.middle_name}
+                          onChange={handleChange}
+                        />
+                      </MDBCol>
+                    </MDBRow>
+
+                    <MDBInput
+                      wrapperClass="mb-4"
+                      label="Last name"
+                      name="last_name"
+                      type="text"
+                      value={form.last_name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </>
+                )}
+
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="Email address"
+                  name="email"
+                  type="email"
+                  value={form.email}
                   onChange={handleChange}
-                  placeholder="Doe"
                   required
                 />
+
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                />
+
+                {mode === "signup" && (
+                  <>
+                    <MDBInput
+                      wrapperClass="mb-4"
+                      label="Admin secret key"
+                      name="admin_secret"
+                      type="password"
+                      value={form.admin_secret}
+                      onChange={handleChange}
+                      required
+                    />
+                    <small className="kw-auth-hint">
+                      Required to create an admin account.
+                    </small>
+                  </>
+                )}
+
+                {error && <div className="kw-auth-error">{error}</div>}
+
+                <MDBBtn
+                  className="w-100 mb-4 kw-auth-submit"
+                  size="md"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Please wait..."
+                    : mode === "signin"
+                    ? "Sign In"
+                    : "Create Admin Account"}
+                </MDBBtn>
+              </form>
+
+              <div className="kw-auth-switch">
+                {mode === "signin" ? (
+                  <>
+                    Need an admin account?{" "}
+                    <button
+                      type="button"
+                      className="kw-auth-link"
+                      onClick={() => switchMode("signup")}
+                    >
+                      Create one
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="kw-auth-link"
+                    onClick={() => switchMode("signin")}
+                  >
+                    Back to admin sign in
+                  </button>
+                )}
               </div>
-            </>
-          )}
-
-          <div className="auth-field">
-            <label>Email Address *</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="admin@example.com"
-              required
-            />
-          </div>
-
-          <div className="auth-field">
-            <label>Password *</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
-          </div>
-
-          {mode === "signup" && (
-            <div className="auth-field">
-              <label>Admin Secret Key *</label>
-              <input
-                type="password"
-                name="admin_secret"
-                value={form.admin_secret}
-                onChange={handleChange}
-                placeholder="Contact your administrator"
-                required
-              />
-              <small className="auth-hint">Required to create an admin account.</small>
-            </div>
-          )}
-
-          {error && <div className="auth-error">{error}</div>}
-
-          <button className="auth-submit" type="submit" disabled={loading}>
-            {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Admin Account"}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          {mode === "signin" ? (
-            <>
-              Need an admin account?{" "}
-              <span className="auth-link" onClick={() => switchMode("signup")}>Create one</span>
-            </>
-          ) : (
-            <span className="auth-link" onClick={() => switchMode("signin")}>Back to Admin Sign In</span>
-          )}
-        </p>
-      </div>
-    </div>
+            </MDBCardBody>
+          </MDBCard>
+        </MDBCol>
+      </MDBRow>
+    </MDBContainer>
   );
 };
 

@@ -23,9 +23,9 @@ const ApplicationDetailModal = ({ application, loading, error, onClose, onStatus
   if (!application && !loading) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal application-detail-modal" onClick={(event) => event.stopPropagation()}>
-        <header className="modal-header">
+    <div className="kw-modal-overlay" onClick={onClose}>
+      <div className="kw-modal application-detail-modal" onClick={(event) => event.stopPropagation()}>
+        <header className="kw-modal-header">
           <div>
             <h2>{application ? `Application #${application.employee_id}` : "Application Details"}</h2>
             {application && (
@@ -37,7 +37,7 @@ const ApplicationDetailModal = ({ application, loading, error, onClose, onStatus
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close modal">✕</button>
         </header>
 
-        <div className="modal-body">
+        <div className="kw-modal-body">
           {loading && <div className="loading-state">Loading application details...</div>}
           {error && <div className="error-banner">{error}</div>}
 

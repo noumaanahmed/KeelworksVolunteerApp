@@ -15,7 +15,7 @@ A professionalized MVP for the KeelWorks volunteer application workflow. The rep
 
 ### Applicant portal
 
-- Applicant account sign-up and sign-in
+- Applicant account sign-up and sign-in with MDB-styled authentication layout
 - Applicant dashboard showing submitted applications
 - Multi-step volunteer application form
 - Country/state/city lookup
@@ -24,7 +24,7 @@ A professionalized MVP for the KeelWorks volunteer application workflow. The rep
 
 ### Admin portal
 
-- Admin account sign-up and sign-in
+- Admin account sign-up and sign-in with MDB-styled authentication layout
 - Admin-only dashboard
 - Paginated application list
 - Full application details modal
@@ -85,6 +85,9 @@ KeelworksVolunteerApp/
     applicant-portal/
       src/
         components/
+        styles/
+          app.css
+          auth-page.css
         App.js
         index.js
       .env.example
@@ -93,6 +96,9 @@ KeelworksVolunteerApp/
     admin-portal/
       src/
         components/
+        styles/
+          admin-dashboard.css
+          auth-page.css
         App.js
         index.js
       .env.example
@@ -155,6 +161,23 @@ KeelworksVolunteerApp/
   package.json
   README.md
 ```
+
+
+## Frontend Styling
+
+Both React portals use the MDB React UI Kit for the authentication screen layout and shared CSS classes for the radial-gradient glass-card design. Portal-level styles are kept outside components:
+
+```text
+apps/applicant-portal/src/styles/
+  app.css
+  auth-page.css
+
+apps/admin-portal/src/styles/
+  admin-dashboard.css
+  auth-page.css
+```
+
+Use inline styles only for truly dynamic values. Layout, form, button, dashboard, and auth styling should live in the appropriate `styles/` file.
 
 ## Backend Architecture
 
