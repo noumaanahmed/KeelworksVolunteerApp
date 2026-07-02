@@ -19,20 +19,39 @@ const getApiErrorMessage = (data) => {
   return "Something went wrong";
 };
 
-const AuthInput = ({ label, wrapperClassName = "mb-3", ...props }) => (
-  <div className={`kw-auth-field kw-auth-floating-field ${wrapperClassName}`.trim()}>
-    <input
-      id={props.id || props.name}
-      className="kw-auth-control kw-auth-floating-input"
-      placeholder=" "
-      aria-label={label}
-      {...props}
-    />
-    <label className="kw-auth-floating-label" htmlFor={props.id || props.name}>
-      {label}
-    </label>
-  </div>
-);
+const AuthInput = ({ label, wrapperClassName = "mb-3", type = "text", ...props }) => {
+  const [showValue, setShowValue] = useState(false);
+  const inputId = props.id || props.name;
+  const isPassword = type === "password";
+
+  return (
+    <div
+      className={`kw-auth-field kw-auth-floating-field ${isPassword ? "kw-auth-password-field" : ""} ${wrapperClassName}`.trim()}
+    >
+      <input
+        id={inputId}
+        className="kw-auth-control kw-auth-floating-input"
+        placeholder=" "
+        aria-label={label}
+        type={isPassword && showValue ? "text" : type}
+        {...props}
+      />
+      <label className="kw-auth-floating-label" htmlFor={inputId}>
+        {label}
+      </label>
+      {isPassword && (
+        <button
+          type="button"
+          className="kw-password-toggle"
+          onClick={() => setShowValue((current) => !current)}
+          aria-label={showValue ? `Hide ${label}` : `Show ${label}`}
+        >
+          {showValue ? "Hide" : "Show"}
+        </button>
+      )}
+    </div>
+  );
+};
 
 const emptyForm = {
   email: "",

@@ -1506,3 +1506,110 @@
   border-color: #70a9e8;
   box-shadow: 0 0 0 3px rgba(112, 169, 232, 0.16);
 }
+
+/* ===== v11: mobile/dashboard polish ===== */
+@media (max-width: 820px) {
+  .admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .admin-header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .header-pill-button {
+    min-width: auto;
+  }
+
+  .admin-main {
+    padding: 18px 14px 28px;
+  }
+
+  .status-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .status-filter-card {
+    min-height: 68px;
+  }
+
+  .applications-card {
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .admin-card-header--split {
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .admin-toolbar {
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .admin-search-form,
+  .admin-search-form--open {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .admin-search-form input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .page-size-control {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .applications-table {
+    min-width: 760px;
+  }
+
+  .kw-modal {
+    max-height: 94vh;
+  }
+
+  .kw-modal-header,
+  .kw-modal-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-card-header h2 {
+    font-size: 24px;
+  }
+
+  .admin-search-form {
+    flex-wrap: wrap;
+  }
+
+  .toolbar-icon-button,
+  .sort-toggle-button,
+  .admin-search-form button,
+  .toolbar-link-button {
+    min-height: 38px;
+  }
+
+  .pagination-bar {
+    gap: 10px;
+  }
+
+  .pagination-bar button {
+    flex: 1 1 120px;
+  }
+}

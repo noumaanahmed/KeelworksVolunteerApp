@@ -592,3 +592,142 @@
 .kw-auth-control.kw-auth-floating-input:focus {
   box-shadow: 0 0 0 4px rgba(45, 108, 223, 0.16) !important;
 }
+
+/* ===== v11: tighter floating labels, password visibility, mobile polish ===== */
+.kw-auth-floating-label {
+  background: var(--kw-auth-card-bg) !important;
+  border-radius: 6px !important;
+  font-size: 1rem;
+  line-height: 0.95;
+  padding: 0 0.22rem !important;
+}
+
+.kw-auth-floating-input:focus + .kw-auth-floating-label,
+.kw-auth-floating-input:not(:placeholder-shown) + .kw-auth-floating-label {
+  font-size: 0.84rem;
+  left: 0.78rem;
+  padding: 0 0.22rem !important;
+  top: -0.4rem;
+}
+
+.kw-auth-password-field .kw-auth-floating-input {
+  padding-right: 4.3rem;
+}
+
+.kw-password-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: #173e63;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  min-height: 30px;
+  padding: 0 0.6rem;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+}
+
+.kw-password-toggle:hover,
+.kw-password-toggle:focus-visible {
+  background: rgba(23, 62, 99, 0.08);
+  outline: none;
+}
+
+.kw-auth-control.kw-auth-floating-input:focus {
+  box-shadow: 0 0 0 4px rgba(45, 108, 223, 0.14) !important;
+}
+
+@media (max-width: 991px) {
+  .kw-auth-layout {
+    align-content: center;
+    gap: 1.25rem;
+    min-height: auto !important;
+  }
+
+  .kw-auth-copy-col {
+    text-align: center !important;
+  }
+
+  .kw-auth-title {
+    font-size: clamp(2rem, 7vw, 3rem) !important;
+    margin: 1.25rem 0 0.75rem !important;
+  }
+
+  .kw-auth-description {
+    font-size: 0.98rem;
+    line-height: 1.55;
+    margin: 0 auto;
+    max-width: 620px;
+  }
+
+  .kw-auth-card-col {
+    min-height: auto;
+  }
+
+  .kw-auth-glass {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .kw-auth-page {
+    padding: 0.85rem !important;
+  }
+
+  .kw-auth-title {
+    font-size: 2.05rem !important;
+  }
+
+  .kw-auth-description {
+    font-size: 0.92rem;
+  }
+
+  .kw-auth-shape-1 {
+    height: 170px;
+    left: -105px;
+    top: -45px;
+    width: 170px;
+  }
+
+  .kw-auth-shape-2 {
+    bottom: -85px;
+    height: 230px;
+    right: -120px;
+    width: 230px;
+  }
+
+  .kw-auth-glass,
+  .kw-auth-glass--signup {
+    border-radius: 16px;
+    width: 100%;
+  }
+
+  .kw-auth-card-body,
+  .kw-auth-glass--signup .kw-auth-card-body {
+    padding: 1.25rem;
+  }
+
+  .kw-auth-card-title {
+    font-size: 2rem;
+  }
+
+  .kw-auth-card-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .kw-auth-control.kw-auth-floating-input {
+    height: 50px;
+    font-size: 1rem;
+  }
+
+  .kw-auth-switch {
+    font-size: 0.9rem;
+  }
+}
