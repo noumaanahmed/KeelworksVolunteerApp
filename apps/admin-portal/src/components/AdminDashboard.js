@@ -44,6 +44,10 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
   const [theme, setTheme] = useState(() => localStorage.getItem("kw_admin_theme") || "light");
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -63,12 +67,19 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     ].slice(0, 6));
   }, []);
 
-  const fetchApplications = useCallback(async (p = 1, filter = statusFilter) => {
+  const fetchApplications = useCallback(async (p = 1, filter = statusFilter, query = searchQuery, sort = sortDirection) => {
     setLoading(true);
     setError("");
 
     try {
-      const data = await fetchAdminApplications({ token, page: p, limit: pageSize, status: filter });
+      const data = await fetchAdminApplications({
+        token,
+        page: p,
+        limit: pageSize,
+        status: filter,
+        search: query,
+        sort,
+      });
       setApplications(data?.applications || []);
       setStatusCounts(data?.status_counts || { total: data?.pagination?.total || 0 });
       setPagination(data?.pagination || { total: 0, current_page: p, total_pages: 1, per_page: pageSize });
@@ -77,11 +88,11 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, statusFilter, pageSize]);
+  }, [token, statusFilter, pageSize, searchQuery, sortDirection]);
 
   useEffect(() => {
-    fetchApplications(page, statusFilter);
-  }, [page, statusFilter, fetchApplications]);
+    fetchApplications(page, statusFilter, searchQuery, sortDirection);
+  }, [page, statusFilter, searchQuery, sortDirection, fetchApplications]);
 
   useEffect(() => {
     localStorage.setItem("kw_admin_theme", theme);
@@ -103,7 +114,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
           ? `New application received from ${application.first_name || "an applicant"} ${application.last_name || ""}.`.trim()
           : "New application received."
       );
-      await fetchApplications(page, statusFilter);
+      await fetchApplications(page, statusFilter, searchQuery, sortDirection);
     });
 
     socket.on("application:statusUpdated", async ({ application }) => {
@@ -114,7 +125,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
         );
       }
 
-      await fetchApplications(page, statusFilter);
+      await fetchApplications(page, statusFilter, searchQuery, sortDirection);
 
       if (!application) return;
 
@@ -132,7 +143,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     return () => {
       socket.disconnect();
     };
-  }, [token, page, statusFilter, fetchApplications, addNotification]);
+  }, [token, page, statusFilter, searchQuery, sortDirection, fetchApplications, addNotification]);
 
   const filterCards = useMemo(() => STATUS_FILTER_CARDS.map((card) => ({
     ...card,
@@ -179,7 +190,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
       addNotification(
         `Application #${updatedApplication.application_number || updatedApplication.employee_id} changed to ${statusLabel(updatedApplication.application_status, updatedApplication.application_status_label)}.`
       );
-      await fetchApplications(page, statusFilter);
+      await fetchApplications(page, statusFilter, searchQuery, sortDirection);
     } catch (err) {
       setDetailError(err.message || "Failed to update application status");
     } finally {
@@ -194,6 +205,23 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
 
   const handlePageSizeChange = (event) => {
     setPageSize(Number(event.target.value));
+    setPage(1);
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    setSearchQuery(searchText.trim());
+    setPage(1);
+  };
+
+  const handleSearchClear = () => {
+    setSearchText("");
+    setSearchQuery("");
+    setPage(1);
+  };
+
+  const handleSortToggle = () => {
+    setSortDirection((current) => current === "desc" ? "asc" : "desc");
     setPage(1);
   };
 
@@ -255,10 +283,13 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
           ))}
         </section>
 
-        {statusFilter && (
+        {(statusFilter || searchQuery) && (
           <div className="active-filter-bar">
-            Showing {STATUS_LABELS[statusFilter] || statusFilter} applications.
-            <button type="button" onClick={() => handleFilterChange("")}>Clear filter</button>
+            <span>
+              {statusFilter ? `Showing ${STATUS_LABELS[statusFilter] || statusFilter} applications` : "Showing all statuses"}
+              {searchQuery ? ` matching "${searchQuery}"` : ""}.
+            </span>
+            <button type="button" onClick={() => { handleFilterChange(""); handleSearchClear(); }}>Clear filters</button>
           </div>
         )}
 
@@ -270,15 +301,50 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
               <h2>Applications</h2>
               <p>Review submissions and move candidates through the onboarding decision workflow.</p>
             </div>
-            <label className="page-size-control">
-              <span>Show</span>
-              <select value={pageSize} onChange={handlePageSizeChange}>
-                {PAGE_SIZE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <span>per page</span>
-            </label>
+            <div className="admin-toolbar" aria-label="Application search and display controls">
+              <button
+                type="button"
+                className={`toolbar-icon-button ${searchOpen ? "toolbar-icon-button--active" : ""}`}
+                onClick={() => setSearchOpen((current) => !current)}
+                aria-label="Search applications"
+                title="Search by name, email, or ID"
+              >
+                🔍
+              </button>
+
+              <form
+                className={`admin-search-form ${searchOpen || searchQuery ? "admin-search-form--open" : ""}`}
+                onSubmit={handleSearchSubmit}
+              >
+                <input
+                  type="search"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search name, email, or ID"
+                  aria-label="Search applications by name, email, or ID"
+                />
+                <button type="submit">Search</button>
+                {(searchText || searchQuery) && (
+                  <button type="button" className="toolbar-link-button" onClick={handleSearchClear}>
+                    Clear
+                  </button>
+                )}
+              </form>
+
+              <button type="button" className="sort-toggle-button" onClick={handleSortToggle}>
+                {sortDirection === "desc" ? "Newest first ↓" : "Oldest first ↑"}
+              </button>
+
+              <label className="page-size-control">
+                <span>Show</span>
+                <select value={pageSize} onChange={handlePageSizeChange}>
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                <span>per page</span>
+              </label>
+            </div>
           </div>
 
           {loading ? (

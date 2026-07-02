@@ -986,3 +986,141 @@
     grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
 }
+
+/* ===== Admin search/sort toolbar v7 ===== */
+.admin-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+.toolbar-icon-button,
+.sort-toggle-button,
+.admin-search-form button,
+.toolbar-link-button {
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: var(--kw-blue-800);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  white-space: nowrap;
+}
+
+.toolbar-icon-button {
+  font-size: 16px;
+  padding: 8px 12px;
+  width: 42px;
+}
+
+.toolbar-icon-button:hover,
+.toolbar-icon-button--active,
+.sort-toggle-button:hover,
+.admin-search-form button:hover,
+.toolbar-link-button:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  box-shadow: none;
+}
+
+.admin-search-form {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-width 220ms ease, opacity 160ms ease;
+}
+
+.admin-search-form--open {
+  max-width: 520px;
+  opacity: 1;
+  overflow: visible;
+  pointer-events: auto;
+}
+
+.admin-search-form input {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: #1f2937;
+  font-size: 14px;
+  min-height: 40px;
+  min-width: 240px;
+  outline: none;
+  padding: 8px 14px;
+}
+
+.admin-search-form input:focus {
+  border-color: #2d6cdf;
+  box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.14);
+}
+
+.toolbar-link-button {
+  background: transparent;
+  border-color: transparent;
+  color: var(--kw-blue-700);
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.admin-page--dark .toolbar-icon-button,
+.admin-page--dark .sort-toggle-button,
+.admin-page--dark .admin-search-form button,
+.admin-page--dark .toolbar-link-button,
+.admin-page--dark .admin-search-form input {
+  background: #1d2b40;
+  border-color: #31506e;
+  color: #dbeafe;
+}
+
+.admin-page--dark .toolbar-icon-button:hover,
+.admin-page--dark .toolbar-icon-button--active,
+.admin-page--dark .sort-toggle-button:hover,
+.admin-page--dark .admin-search-form button:hover,
+.admin-page--dark .toolbar-link-button:hover {
+  background: #243955;
+  border-color: #4f78a7;
+}
+
+.admin-page--dark .admin-search-form input:focus {
+  border-color: #70a9e8;
+  box-shadow: 0 0 0 3px rgba(112, 169, 232, 0.16);
+}
+
+.admin-page--dark .applications-table tbody tr:nth-child(odd) {
+  background: #172335;
+}
+
+@media (max-width: 1100px) {
+  .admin-card-header--split {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-toolbar {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .admin-search-form--open {
+    max-width: 100%;
+  }
+
+  .admin-search-form input {
+    min-width: 180px;
+    width: min(70vw, 260px);
+  }
+}

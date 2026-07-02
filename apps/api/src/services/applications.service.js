@@ -83,13 +83,15 @@ export const getMyApplications = async (authenticatedUser) => {
 export const getAdminApplications = async (query) => {
   const { page, limit, offset } = validatePagination(query);
   const requestedStatus = query?.status ? String(query.status).trim() : "";
+  const requestedSearch = query?.search ? String(query.search).trim().slice(0, 100) : "";
+  const requestedSort = String(query?.sort || "desc").toLowerCase() === "asc" ? "ASC" : "DESC";
 
   if (requestedStatus && !isKnownApplicationStatus(requestedStatus)) {
     throw new AppError("Unknown application status filter.", 400, "INVALID_APPLICATION_STATUS", { status: requestedStatus });
   }
 
   const [result, statusCounts] = await Promise.all([
-    listApplications({ limit, offset, status: requestedStatus || null }),
+    listApplications({ limit, offset, status: requestedStatus || null, search: requestedSearch, sortDirection: requestedSort }),
     countApplicationsByStatus(),
   ]);
   const total = result.count;
@@ -112,6 +114,8 @@ export const getAdminApplications = async (query) => {
     },
     filter: {
       status: requestedStatus || null,
+      search: requestedSearch || null,
+      sort: requestedSort.toLowerCase(),
     },
   };
 };

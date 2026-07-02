@@ -122,12 +122,52 @@ export const findApplicationsByUserId = (userId) =>
     ],
   });
 
-export const listApplications = ({ limit, offset, status }) => {
-  const where = status ? { application_status: status } : undefined;
+export const listApplications = ({ limit, offset, status, search, sortDirection = "DESC" }) => {
+  const where = {};
+
+  if (status) {
+    where.application_status = status;
+  }
+
+  const normalizedSearch = search ? String(search).trim() : "";
+  if (normalizedSearch) {
+    const cleanSearch = normalizedSearch.replace(/^#/, "");
+    const likeSearch = `%${cleanSearch}%`;
+    const searchConditions = [
+      { first_name: { [Op.like]: likeSearch } },
+      { last_name: { [Op.like]: likeSearch } },
+      { personal_email: { [Op.like]: likeSearch } },
+    ];
+
+    const nameParts = cleanSearch.split(/\s+/).filter(Boolean);
+    if (nameParts.length >= 2) {
+      searchConditions.push({
+        [Op.and]: [
+          { first_name: { [Op.like]: `%${nameParts[0]}%` } },
+          { last_name: { [Op.like]: `%${nameParts.slice(1).join(" ")}%` } },
+        ],
+      });
+      searchConditions.push({
+        [Op.and]: [
+          { first_name: { [Op.like]: `%${nameParts.slice(1).join(" ")}%` } },
+          { last_name: { [Op.like]: `%${nameParts[0]}%` } },
+        ],
+      });
+    }
+
+    const numericSearch = Number.parseInt(cleanSearch, 10);
+    if (Number.isInteger(numericSearch) && String(numericSearch) === cleanSearch) {
+      searchConditions.push({ employee_id: numericSearch });
+    }
+
+    where[Op.or] = searchConditions;
+  }
+
+  const direction = String(sortDirection).toUpperCase() === "ASC" ? "ASC" : "DESC";
 
   return Employee.findAndCountAll({
     where,
-    order: [["employee_id", "DESC"]],
+    order: [["employee_id", direction]],
     limit,
     offset,
     attributes: applicationListAttributes,
