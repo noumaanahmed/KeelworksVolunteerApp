@@ -47,7 +47,12 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [appliedDateFilter, setAppliedDateFilter] = useState("");
+  const [sortBy, setSortBy] = useState("id");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [columnFilterOpen, setColumnFilterOpen] = useState(null);
+  const [filterOptions, setFilterOptions] = useState({ roles: [], applied_dates: [] });
 
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -67,7 +72,15 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     ].slice(0, 6));
   }, []);
 
-  const fetchApplications = useCallback(async (p = 1, filter = statusFilter, query = searchQuery, sort = sortDirection) => {
+  const fetchApplications = useCallback(async (
+    p = 1,
+    filter = statusFilter,
+    query = searchQuery,
+    role = roleFilter,
+    appliedDate = appliedDateFilter,
+    sortColumn = sortBy,
+    sort = sortDirection
+  ) => {
     setLoading(true);
     setError("");
 
@@ -78,21 +91,25 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
         limit: pageSize,
         status: filter,
         search: query,
+        role,
+        appliedDate,
+        sortBy: sortColumn,
         sort,
       });
       setApplications(data?.applications || []);
       setStatusCounts(data?.status_counts || { total: data?.pagination?.total || 0 });
+      setFilterOptions(data?.filter_options || { roles: [], applied_dates: [] });
       setPagination(data?.pagination || { total: 0, current_page: p, total_pages: 1, per_page: pageSize });
     } catch (err) {
       setError(err.message || "Failed to load applications");
     } finally {
       setLoading(false);
     }
-  }, [token, statusFilter, pageSize, searchQuery, sortDirection]);
+  }, [token, statusFilter, pageSize, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection]);
 
   useEffect(() => {
-    fetchApplications(page, statusFilter, searchQuery, sortDirection);
-  }, [page, statusFilter, searchQuery, sortDirection, fetchApplications]);
+    fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
+  }, [page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection, fetchApplications]);
 
   useEffect(() => {
     localStorage.setItem("kw_admin_theme", theme);
@@ -114,7 +131,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
           ? `New application received from ${application.first_name || "an applicant"} ${application.last_name || ""}.`.trim()
           : "New application received."
       );
-      await fetchApplications(page, statusFilter, searchQuery, sortDirection);
+      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
     });
 
     socket.on("application:statusUpdated", async ({ application }) => {
@@ -125,7 +142,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
         );
       }
 
-      await fetchApplications(page, statusFilter, searchQuery, sortDirection);
+      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
 
       if (!application) return;
 
@@ -143,7 +160,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     return () => {
       socket.disconnect();
     };
-  }, [token, page, statusFilter, searchQuery, sortDirection, fetchApplications, addNotification]);
+  }, [token, page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection, fetchApplications, addNotification]);
 
   const filterCards = useMemo(() => STATUS_FILTER_CARDS.map((card) => ({
     ...card,
@@ -190,7 +207,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
       addNotification(
         `Application #${updatedApplication.application_number || updatedApplication.employee_id} changed to ${statusLabel(updatedApplication.application_status, updatedApplication.application_status_label)}.`
       );
-      await fetchApplications(page, statusFilter, searchQuery, sortDirection);
+      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
     } catch (err) {
       setDetailError(err.message || "Failed to update application status");
     } finally {
@@ -220,8 +237,39 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     setPage(1);
   };
 
-  const handleSortToggle = () => {
-    setSortDirection((current) => current === "desc" ? "asc" : "desc");
+  const clearAllFilters = () => {
+    setStatusFilter("");
+    setSearchText("");
+    setSearchQuery("");
+    setRoleFilter("");
+    setAppliedDateFilter("");
+    setColumnFilterOpen(null);
+    setPage(1);
+  };
+
+  const handleSortChange = (column) => {
+    setSortDirection((currentDirection) => {
+      if (sortBy !== column) return "asc";
+      return currentDirection === "asc" ? "desc" : "asc";
+    });
+    setSortBy(column);
+    setPage(1);
+  };
+
+  const sortIndicator = (column) => {
+    if (sortBy !== column) return "↕";
+    return sortDirection === "asc" ? "↑" : "↓";
+  };
+
+  const handleRoleFilterChange = (role) => {
+    setRoleFilter(role);
+    setColumnFilterOpen(null);
+    setPage(1);
+  };
+
+  const handleAppliedDateFilterChange = (date) => {
+    setAppliedDateFilter(date);
+    setColumnFilterOpen(null);
     setPage(1);
   };
 
@@ -283,13 +331,15 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
           ))}
         </section>
 
-        {(statusFilter || searchQuery) && (
+        {(statusFilter || searchQuery || roleFilter || appliedDateFilter) && (
           <div className="active-filter-bar">
             <span>
               {statusFilter ? `Showing ${STATUS_LABELS[statusFilter] || statusFilter} applications` : "Showing all statuses"}
-              {searchQuery ? ` matching "${searchQuery}"` : ""}.
+              {searchQuery ? ` matching "${searchQuery}"` : ""}
+              {roleFilter ? ` for ${roleFilter}` : ""}
+              {appliedDateFilter ? ` applied on ${formatDate(appliedDateFilter)}` : ""}.
             </span>
-            <button type="button" onClick={() => { handleFilterChange(""); handleSearchClear(); }}>Clear filters</button>
+            <button type="button" onClick={clearAllFilters}>Clear filters</button>
           </div>
         )}
 
@@ -307,7 +357,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
                 className={`toolbar-icon-button ${searchOpen ? "toolbar-icon-button--active" : ""}`}
                 onClick={() => setSearchOpen((current) => !current)}
                 aria-label="Search applications"
-                title="Search by name, email, or ID"
+                title="Search by name or email"
               >
                 🔍
               </button>
@@ -320,8 +370,8 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
                   type="search"
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
-                  placeholder="Search name, email, or ID"
-                  aria-label="Search applications by name, email, or ID"
+                  placeholder="Search name or email"
+                  aria-label="Search applications by name or email"
                 />
                 <button type="submit">Search</button>
                 {(searchText || searchQuery) && (
@@ -331,9 +381,6 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
                 )}
               </form>
 
-              <button type="button" className="sort-toggle-button" onClick={handleSortToggle}>
-                {sortDirection === "desc" ? "Newest first ↓" : "Oldest first ↑"}
-              </button>
 
               <label className="page-size-control">
                 <span>Show</span>
@@ -356,12 +403,76 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
               <table className="applications-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
+                    <th>
+                      <button type="button" className="table-header-button" onClick={() => handleSortChange("id")}>
+                        ID <span>{sortIndicator("id")}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="table-header-button" onClick={() => handleSortChange("name")}>
+                        Name <span>{sortIndicator("name")}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="table-header-button" onClick={() => handleSortChange("email")}>
+                        Email <span>{sortIndicator("email")}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <div className="column-filter-wrapper">
+                        <button
+                          type="button"
+                          className={`table-header-button table-filter-button ${roleFilter ? "table-filter-button--active" : ""}`}
+                          onClick={() => setColumnFilterOpen((current) => current === "role" ? null : "role")}
+                        >
+                          Role <span>{roleFilter ? "●" : "▾"}</span>
+                        </button>
+                        {columnFilterOpen === "role" && (
+                          <div className="column-filter-menu">
+                            <button type="button" onClick={() => handleRoleFilterChange("")}>All roles</button>
+                            {(filterOptions.roles || []).map((role) => (
+                              <button
+                                type="button"
+                                key={role}
+                                className={roleFilter === role ? "column-filter-option--active" : ""}
+                                onClick={() => handleRoleFilterChange(role)}
+                              >
+                                {role}
+                              </button>
+                            ))}
+                            {(filterOptions.roles || []).length === 0 && <span>No roles available</span>}
+                          </div>
+                        )}
+                      </div>
+                    </th>
                     <th>Status</th>
-                    <th>Applied</th>
+                    <th>
+                      <div className="column-filter-wrapper">
+                        <button
+                          type="button"
+                          className={`table-header-button table-filter-button ${appliedDateFilter ? "table-filter-button--active" : ""}`}
+                          onClick={() => setColumnFilterOpen((current) => current === "applied" ? null : "applied")}
+                        >
+                          Applied <span>{appliedDateFilter ? "●" : "▾"}</span>
+                        </button>
+                        {columnFilterOpen === "applied" && (
+                          <div className="column-filter-menu column-filter-menu--right">
+                            <button type="button" onClick={() => handleAppliedDateFilterChange("")}>All dates</button>
+                            {(filterOptions.applied_dates || []).map((date) => (
+                              <button
+                                type="button"
+                                key={date}
+                                className={appliedDateFilter === date ? "column-filter-option--active" : ""}
+                                onClick={() => handleAppliedDateFilterChange(date)}
+                              >
+                                {formatDate(date)}
+                              </button>
+                            ))}
+                            {(filterOptions.applied_dates || []).length === 0 && <span>No dates available</span>}
+                          </div>
+                        )}
+                      </div>
+                    </th>
                     <th>Actions</th>
                   </tr>
                 </thead>

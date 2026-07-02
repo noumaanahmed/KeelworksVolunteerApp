@@ -545,3 +545,25 @@
 .kw-auth-page .kw-auth-field .kw-auth-control::placeholder {
   color: transparent !important;
 }
+
+
+/* ===== Auth floating-label cleanup v8: remove visible label backdrops ===== */
+.kw-auth-floating-label {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  text-shadow:
+    -1px 0 var(--kw-auth-card-bg),
+    0 1px var(--kw-auth-card-bg),
+    1px 0 var(--kw-auth-card-bg),
+    0 -1px var(--kw-auth-card-bg),
+    0 0 5px var(--kw-auth-card-bg);
+}
+
+.kw-auth-floating-input:focus + .kw-auth-floating-label,
+.kw-auth-floating-input:not(:placeholder-shown) + .kw-auth-floating-label {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}

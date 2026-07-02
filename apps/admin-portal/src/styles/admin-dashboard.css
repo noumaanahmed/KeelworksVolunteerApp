@@ -1124,3 +1124,136 @@
     width: min(70vw, 260px);
   }
 }
+
+
+/* ===== Admin table sorting and column filters v8 ===== */
+.applications-table th {
+  position: relative;
+}
+
+.table-header-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 800;
+  gap: 6px;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table-header-button span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.table-header-button:hover,
+.table-header-button:focus-visible {
+  color: #facc15;
+  outline: none;
+}
+
+.table-header-button:hover span,
+.table-header-button:focus-visible span,
+.table-filter-button--active span {
+  color: #facc15;
+}
+
+.column-filter-wrapper {
+  display: inline-flex;
+  position: relative;
+}
+
+.column-filter-menu {
+  animation: kw-pop-in 150ms ease both;
+  background: #ffffff;
+  border: 1px solid var(--kw-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  left: 0;
+  max-height: 270px;
+  min-width: 230px;
+  overflow-y: auto;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 10px);
+  z-index: 80;
+}
+
+.column-filter-menu--right {
+  left: auto;
+  right: 0;
+}
+
+.column-filter-menu button,
+.column-filter-menu span {
+  border-radius: 9px;
+  font-size: 13px;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.column-filter-menu button {
+  background: transparent;
+  border: 0;
+  color: #1f2937;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.column-filter-menu button:hover,
+.column-filter-option--active {
+  background: #eff6ff !important;
+  color: var(--kw-blue-800) !important;
+}
+
+.column-filter-menu span {
+  color: var(--kw-muted);
+}
+
+.admin-page--dark .column-filter-menu {
+  background: #172335;
+  border-color: #31506e;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  color: #e5edf7;
+}
+
+.admin-page--dark .column-filter-menu button {
+  color: #e5edf7;
+}
+
+.admin-page--dark .column-filter-menu button:hover,
+.admin-page--dark .column-filter-option--active {
+  background: #243955 !important;
+  color: #dbeafe !important;
+}
+
+.admin-page--dark .column-filter-menu span {
+  color: #aab7c8;
+}
+
+.admin-search-form input::placeholder {
+  color: #64748b;
+}
+
+.admin-page--dark .admin-search-form input::placeholder {
+  color: #94a3b8;
+}
+
+@media (max-width: 720px) {
+  .column-filter-menu,
+  .column-filter-menu--right {
+    left: 0;
+    right: auto;
+  }
+}

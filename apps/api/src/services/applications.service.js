@@ -5,6 +5,7 @@ import {
   findBlockingApplicationByUserOrEmail,
   findApplicationsByUserId,
   listApplications,
+  listApplicationFilterOptions,
   countApplicationsByStatus,
   countApplicationsUpToEmployeeId,
   updateApplicationStatus as updateApplicationStatusRecord,
@@ -84,15 +85,34 @@ export const getAdminApplications = async (query) => {
   const { page, limit, offset } = validatePagination(query);
   const requestedStatus = query?.status ? String(query.status).trim() : "";
   const requestedSearch = query?.search ? String(query.search).trim().slice(0, 100) : "";
+  const requestedRole = query?.role ? String(query.role).trim().slice(0, 120) : "";
+  const requestedAppliedDate = query?.applied_date ? String(query.applied_date).trim() : "";
   const requestedSort = String(query?.sort || "desc").toLowerCase() === "asc" ? "ASC" : "DESC";
+  const requestedSortBy = ["id", "name", "email", "role", "applied"].includes(String(query?.sort_by || "").toLowerCase())
+    ? String(query.sort_by).toLowerCase()
+    : "id";
 
   if (requestedStatus && !isKnownApplicationStatus(requestedStatus)) {
     throw new AppError("Unknown application status filter.", 400, "INVALID_APPLICATION_STATUS", { status: requestedStatus });
   }
 
-  const [result, statusCounts] = await Promise.all([
-    listApplications({ limit, offset, status: requestedStatus || null, search: requestedSearch, sortDirection: requestedSort }),
+  if (requestedAppliedDate && !/^\d{4}-\d{2}-\d{2}$/.test(requestedAppliedDate)) {
+    throw new AppError("Applied date filter must use YYYY-MM-DD format.", 400, "INVALID_APPLIED_DATE_FILTER");
+  }
+
+  const [result, statusCounts, filterOptions] = await Promise.all([
+    listApplications({
+      limit,
+      offset,
+      status: requestedStatus || null,
+      search: requestedSearch,
+      role: requestedRole || null,
+      appliedDate: requestedAppliedDate || null,
+      sortBy: requestedSortBy,
+      sortDirection: requestedSort,
+    }),
     countApplicationsByStatus(),
+    listApplicationFilterOptions(),
   ]);
   const total = result.count;
 
@@ -115,8 +135,12 @@ export const getAdminApplications = async (query) => {
     filter: {
       status: requestedStatus || null,
       search: requestedSearch || null,
+      role: requestedRole || null,
+      applied_date: requestedAppliedDate || null,
+      sort_by: requestedSortBy,
       sort: requestedSort.toLowerCase(),
     },
+    filter_options: filterOptions,
   };
 };
 

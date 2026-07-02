@@ -122,11 +122,58 @@ export const findApplicationsByUserId = (userId) =>
     ],
   });
 
-export const listApplications = ({ limit, offset, status, search, sortDirection = "DESC" }) => {
+const normalizeDateFilterRange = (value) => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return null;
+
+  const start = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(start.getTime())) return null;
+
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+
+  return { start, end };
+};
+
+const getSortOrder = ({ sortBy = "id", sortDirection = "DESC" }) => {
+  const direction = String(sortDirection).toUpperCase() === "ASC" ? "ASC" : "DESC";
+
+  const sortMap = {
+    id: [["employee_id", direction]],
+    name: [["first_name", direction], ["last_name", direction], ["employee_id", "DESC"]],
+    email: [["personal_email", direction], ["employee_id", "DESC"]],
+    role: [["interested_role", direction], ["employee_id", "DESC"]],
+    applied: [["application_date", direction], ["employee_id", "DESC"]],
+  };
+
+  return sortMap[String(sortBy).toLowerCase()] || sortMap.id;
+};
+
+export const listApplications = ({
+  limit,
+  offset,
+  status,
+  search,
+  role,
+  appliedDate,
+  sortBy = "id",
+  sortDirection = "DESC",
+}) => {
   const where = {};
 
   if (status) {
     where.application_status = status;
+  }
+
+  if (role) {
+    where.interested_role = role;
+  }
+
+  const dateRange = normalizeDateFilterRange(appliedDate);
+  if (dateRange) {
+    where.application_date = {
+      [Op.gte]: dateRange.start,
+      [Op.lt]: dateRange.end,
+    };
   }
 
   const normalizedSearch = search ? String(search).trim() : "";
@@ -155,23 +202,45 @@ export const listApplications = ({ limit, offset, status, search, sortDirection 
       });
     }
 
-    const numericSearch = Number.parseInt(cleanSearch, 10);
-    if (Number.isInteger(numericSearch) && String(numericSearch) === cleanSearch) {
-      searchConditions.push({ employee_id: numericSearch });
-    }
-
     where[Op.or] = searchConditions;
   }
 
-  const direction = String(sortDirection).toUpperCase() === "ASC" ? "ASC" : "DESC";
-
   return Employee.findAndCountAll({
     where,
-    order: [["employee_id", direction]],
+    order: getSortOrder({ sortBy, sortDirection }),
     limit,
     offset,
     attributes: applicationListAttributes,
   });
+};
+
+export const listApplicationFilterOptions = async () => {
+  const [roleRows, dateRows] = await Promise.all([
+    Employee.findAll({
+      attributes: [[fn("DISTINCT", col("interested_role")), "role"]],
+      where: {
+        interested_role: { [Op.ne]: null },
+      },
+      order: [["interested_role", "ASC"]],
+      raw: true,
+    }),
+    Employee.findAll({
+      attributes: [[fn("DATE", col("application_date")), "applied_date"]],
+      group: [fn("DATE", col("application_date"))],
+      order: [[fn("DATE", col("application_date")), "DESC"]],
+      raw: true,
+    }),
+  ]);
+
+  return {
+    roles: roleRows
+      .map((row) => row.role)
+      .filter((roleValue) => typeof roleValue === "string" && roleValue.trim())
+      .map((roleValue) => roleValue.trim()),
+    applied_dates: dateRows
+      .map((row) => row.applied_date)
+      .filter(Boolean),
+  };
 };
 
 export const countApplicationsByStatus = async () => {

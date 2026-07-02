@@ -16,10 +16,23 @@ const parseResponse = async (response, fallbackMessage) => {
   return data?.data || null;
 };
 
-export const fetchAdminApplications = async ({ token, page = 1, limit = 20, status = "", search = "", sort = "desc" }) => {
+export const fetchAdminApplications = async ({
+  token,
+  page = 1,
+  limit = 20,
+  status = "",
+  search = "",
+  role = "",
+  appliedDate = "",
+  sortBy = "id",
+  sort = "desc",
+}) => {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status) params.set("status", status);
   if (search) params.set("search", search);
+  if (role) params.set("role", role);
+  if (appliedDate) params.set("applied_date", appliedDate);
+  if (sortBy) params.set("sort_by", sortBy);
   if (sort) params.set("sort", sort);
 
   const response = await fetch(`${API_BASE_URL}/api/v1/applications/admin?${params.toString()}`, {
