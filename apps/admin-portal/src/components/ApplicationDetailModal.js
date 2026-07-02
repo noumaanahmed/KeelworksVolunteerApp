@@ -27,7 +27,7 @@ const ApplicationDetailModal = ({ application, loading, error, onClose, onStatus
       <div className="kw-modal application-detail-modal" onClick={(event) => event.stopPropagation()}>
         <header className="kw-modal-header">
           <div>
-            <h2>{application ? `Application #${application.employee_id}` : "Application Details"}</h2>
+            <h2>{application ? `Application #${application.application_number || application.employee_id}` : "Application Details"}</h2>
             {application && (
               <p>
                 {application.first_name} {application.last_name} · {application.interested_role || "Volunteer Application"}

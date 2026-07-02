@@ -2,9 +2,11 @@ import { AppError } from "../utils/app-error.js";
 import {
   createApplication,
   findAdminApplicationById,
-  findApplicationByEmail,
+  findBlockingApplicationByUserOrEmail,
   findApplicationsByUserId,
   listApplications,
+  countApplicationsByStatus,
+  countApplicationsUpToEmployeeId,
   updateApplicationStatus as updateApplicationStatusRecord,
 } from "../repositories/applications.repository.js";
 import { assertLocationReferencesExist } from "./locations.service.js";
@@ -44,9 +46,17 @@ export const submitApplication = async (payload, authenticatedUser) => {
     countryId: validated.employee.country_id,
   });
 
-  const existingApplication = await findApplicationByEmail(validated.employee.personal_email);
-  if (existingApplication) {
-    throw new AppError("You have already submitted an application with this email.", 409, "DUPLICATE_APPLICATION");
+  const blockingApplication = await findBlockingApplicationByUserOrEmail({
+    userId: authenticatedUser.user_id,
+    email: validated.employee.personal_email,
+  });
+
+  if (blockingApplication) {
+    throw new AppError(
+      "You already have an application in progress. You can submit a new application only after the current one is declined.",
+      409,
+      "ACTIVE_APPLICATION_EXISTS"
+    );
   }
 
   try {
@@ -72,15 +82,36 @@ export const getMyApplications = async (authenticatedUser) => {
 
 export const getAdminApplications = async (query) => {
   const { page, limit, offset } = validatePagination(query);
-  const result = await listApplications({ limit, offset });
+  const requestedStatus = query?.status ? String(query.status).trim() : "";
+
+  if (requestedStatus && !isKnownApplicationStatus(requestedStatus)) {
+    throw new AppError("Unknown application status filter.", 400, "INVALID_APPLICATION_STATUS", { status: requestedStatus });
+  }
+
+  const [result, statusCounts] = await Promise.all([
+    listApplications({ limit, offset, status: requestedStatus || null }),
+    countApplicationsByStatus(),
+  ]);
+  const total = result.count;
+
+  const applications = await Promise.all(
+    result.rows.map(async (application) => ({
+      ...toAdminApplicationRow(application),
+      application_number: await countApplicationsUpToEmployeeId(application.employee_id),
+    }))
+  );
 
   return {
-    applications: result.rows.map(toAdminApplicationRow),
+    applications,
+    status_counts: statusCounts,
     pagination: {
-      total: result.count,
+      total,
       current_page: page,
-      total_pages: Math.ceil(result.count / limit),
+      total_pages: Math.ceil(total / limit),
       per_page: limit,
+    },
+    filter: {
+      status: requestedStatus || null,
     },
   };
 };
@@ -96,7 +127,9 @@ export const getAdminApplicationDetail = async (employeeId) => {
     throw new AppError("Application not found.", 404, "APPLICATION_NOT_FOUND");
   }
 
-  return toAdminApplicationDetail(application);
+  const detail = toAdminApplicationDetail(application);
+  detail.application_number = await countApplicationsUpToEmployeeId(id);
+  return detail;
 };
 
 export const changeAdminApplicationStatus = async ({ employeeId, payload, authenticatedUser }) => {

@@ -16,8 +16,11 @@ const parseResponse = async (response, fallbackMessage) => {
   return data?.data || null;
 };
 
-export const fetchAdminApplications = async ({ token, page = 1, limit = 10 }) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/applications/admin?page=${page}&limit=${limit}`, {
+export const fetchAdminApplications = async ({ token, page = 1, limit = 20, status = "" }) => {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status) params.set("status", status);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/applications/admin?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

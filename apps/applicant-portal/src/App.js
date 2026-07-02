@@ -24,6 +24,7 @@ export default function App() {
   const [authToken, setAuthToken] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [applicantView, setApplicantView] = useState(VIEW_DASHBOARD);
+  const [theme, setTheme] = useState(() => localStorage.getItem("kw_applicant_theme") || "light");
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -59,6 +60,14 @@ export default function App() {
 
     setAuthChecked(true);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("kw_applicant_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((current) => current === "dark" ? "light" : "dark");
+  };
 
   // Pressing the browser Back button while logged in signs the user out
   // and returns them to the Sign In page.
@@ -131,9 +140,15 @@ export default function App() {
   };
 
   const handleReturnHomeFromThankYou = () => {
-    // "Return to home" after a successful application takes the user back
-    // to the Sign In page, signing them out in the process.
-    handleSignOut();
+    setApplicantView(VIEW_DASHBOARD);
+    setStep(1);
+    setFormData({
+      personalInformation: {},
+      educationAndExperience: {},
+      roleAndAvailability: {},
+      additionalInformation: {},
+      identification: {},
+    });
   };
 
   const handleFormChange = (stepName, data) => {
@@ -146,6 +161,28 @@ export default function App() {
 
   const handleBackButton = () => {
     if (step > 1) setStep(step - 1);
+  };
+
+  const hasFormDataForStep = (targetStep) => {
+    const stepKeys = {
+      1: "personalInformation",
+      2: "educationAndExperience",
+      3: "roleAndAvailability",
+      4: "additionalInformation",
+      5: "identification",
+    };
+    const data = formData[stepKeys[targetStep]] || {};
+    return Object.values(data).some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (value && typeof value === "object") return Object.keys(value).length > 0;
+      return value !== undefined && value !== null && String(value).trim() !== "";
+    });
+  };
+
+  const canStepNavigate = (targetStep) => targetStep <= step || hasFormDataForStep(targetStep);
+
+  const handleStepClick = (targetStep) => {
+    if (canStepNavigate(targetStep)) setStep(targetStep);
   };
 
   // Resolve the typed city name into a real city_id.
@@ -455,13 +492,17 @@ export default function App() {
         token={authToken}
         onSignOut={handleSignOut}
         onStartApplication={handleStartApplication}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
     );
   }
 
   // applicantView === VIEW_FORM
+  const isDark = theme === "dark";
+
   return (
-    <div className="container">
+    <div className={`container applicant-form-page ${isDark ? "applicant-form-page--dark" : ""}`}>
       <header className="header">
         <div className="headerText">
           <h1>KeelWorks Volunteer Sign Up</h1>
@@ -471,7 +512,10 @@ export default function App() {
           </p>
         </div>
 
-        <div style={{ position: "absolute", top: "16px", right: "20px" }}>
+        <div className="form-header-actions">
+          <button type="button" className="form-theme-toggle" onClick={toggleTheme}>
+            {isDark ? "☀️ Light" : "🌙 Night"}
+          </button>
           <ProfileMenu
             name={authUser.full_name}
             onSignOut={handleSignOut}
@@ -498,10 +542,12 @@ export default function App() {
       >
         <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{ marginRight: "40px", marginTop: "55px" }}>
-            <VerticalStepper step={step} />
+            <VerticalStepper step={step} onStepClick={handleStepClick} canStepNavigate={canStepNavigate} dark={isDark} />
           </div>
 
           <div
+            className="form-step-shell"
+            key={step}
             style={{
               flexGrow: 1,
               display: "flex",

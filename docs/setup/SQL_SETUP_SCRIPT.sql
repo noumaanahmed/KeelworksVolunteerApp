@@ -1,14 +1,30 @@
 -- ============================================================
 -- KeelWorks Volunteer Application - Professional MVP
--- FIRST-TIME / FULL RESET SETUP SCRIPT
+-- SINGLE FIRST-TIME / FULL RESET SETUP SCRIPT
+--
+-- This is the only SQL setup script for the project.
+-- Run this file once for a brand-new local or Railway MySQL database.
+-- Do not run any separate setup/patch scripts for the initial setup.
 --
 -- WARNING:
---   This script wipes the KeelWorks tables in the volunteer_management
---   database and recreates the clean MVP schema from scratch.
+--   This script wipes the KeelWorks tables in the selected database and
+--   recreates the clean MVP schema from scratch.
+--
+-- Local default:
+--   CREATE/USE volunteer_management.
+--
+-- Railway note:
+--   Railway MySQL usually provides an existing database named railway.
+--   For Railway, change the CREATE DATABASE / USE lines below to:
+--     USE railway;
+--   Then run the whole script once in MySQL Workbench.
 --
 -- What this includes:
 --   - Current backend-compatible schema
+--   - users.email UNIQUE so duplicate user accounts are blocked
 --   - Employee.user_id for applicant dashboard ownership
+--   - Employee personal_email/phone/linkedin_url as normal indexes, not unique,
+--     so a declined applicant can submit a new application later
 --   - EEOData.employee_id for EEO-to-application linkage
 --   - Countries seeded for the location dropdown
 --   - States/provinces for US, Canada, India, UK, Australia
@@ -127,9 +143,9 @@ CREATE TABLE Employee (
   last_name           VARCHAR(50) NOT NULL,
   employee_type       ENUM('Paid','Not Paid') NULL,
   birth_date          DATE NULL,
-  linkedin_url        VARCHAR(255) NULL UNIQUE,
-  personal_email      VARCHAR(255) NOT NULL UNIQUE,
-  phone               VARCHAR(20) NOT NULL UNIQUE,
+  linkedin_url        VARCHAR(255) NULL,
+  personal_email      VARCHAR(255) NOT NULL,
+  phone               VARCHAR(20) NOT NULL,
   phonetype           ENUM('Mobile', 'Home', 'Work') NOT NULL,
   address_id          INT NOT NULL,
   country_id          INT NOT NULL,
@@ -160,6 +176,11 @@ CREATE TABLE Employee (
     FOREIGN KEY (address_id) REFERENCES Address(address_id)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   INDEX idx_employee_user (user_id),
+  -- These are intentionally normal indexes, not UNIQUE constraints.
+  -- Duplicate accounts are blocked by users.email; declined applicants may reapply later.
+  INDEX idx_employee_email (personal_email),
+  INDEX idx_employee_phone (phone),
+  INDEX idx_employee_linkedin (linkedin_url),
   INDEX idx_employee_country (country_id),
   INDEX idx_employee_status (application_status),
   INDEX idx_employee_application_date (application_date)

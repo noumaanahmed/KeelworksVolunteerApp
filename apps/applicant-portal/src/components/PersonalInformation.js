@@ -17,6 +17,7 @@ const FIELD_LABELS = {
 };
 
 const PersonalInformation = ({ handleNextButton, handleFormChange, initialData = {}, countries = [], authUser = null }) => {
+  const lockedProfileFields = Boolean(authUser);
   const [personalData, setPersonalData] = useState({
     firstName: initialData.firstName || authUser?.first_name || "",
     middleName: initialData.middleName || authUser?.middle_name || "",
@@ -194,14 +195,15 @@ const PersonalInformation = ({ handleNextButton, handleFormChange, initialData =
             <label htmlFor="firstName">First name<span className="requiredLabel">*</span></label>
             <input
               type="text" id="firstName" name="firstName"
-              className={showError("firstName") ? "input-invalid" : ""}
+              className={`${showError("firstName") ? "input-invalid" : ""} ${lockedProfileFields ? "input-readonly" : ""}`.trim()}
               value={personalData.firstName} onChange={handleChange} onBlur={handleBlur}
+              disabled={lockedProfileFields}
             />
             {showError("firstName") && <span className="field-error">{errors.firstName}</span>}
           </div>
           <div className="form-group">
             <label htmlFor="middleName">Middle name (optional)</label>
-            <input type="text" id="middleName" name="middleName" value={personalData.middleName} onChange={handleChange} />
+            <input type="text" id="middleName" name="middleName" className={lockedProfileFields ? "input-readonly" : ""} value={personalData.middleName} onChange={handleChange} disabled={lockedProfileFields} />
           </div>
         </div>
 
@@ -209,8 +211,9 @@ const PersonalInformation = ({ handleNextButton, handleFormChange, initialData =
           <label htmlFor="lastName">Last name<span className="requiredLabel">*</span></label>
           <input
             type="text" id="lastName" name="lastName"
-            className={showError("lastName") ? "input-invalid" : ""}
+            className={`${showError("lastName") ? "input-invalid" : ""} ${lockedProfileFields ? "input-readonly" : ""}`.trim()}
             value={personalData.lastName} onChange={handleChange} onBlur={handleBlur}
+            disabled={lockedProfileFields}
           />
           {showError("lastName") && <span className="field-error">{errors.lastName}</span>}
         </div>
@@ -219,8 +222,9 @@ const PersonalInformation = ({ handleNextButton, handleFormChange, initialData =
           <label htmlFor="email">Email address<span className="requiredLabel">*</span></label>
           <input
             type="email" id="email" name="email"
-            className={showError("email") ? "input-invalid" : ""}
+            className={`${showError("email") ? "input-invalid" : ""} ${lockedProfileFields ? "input-readonly" : ""}`.trim()}
             value={personalData.email} onChange={handleChange} onBlur={handleBlur}
+            disabled={lockedProfileFields}
           />
           {showError("email") && <span className="field-error">{errors.email}</span>}
         </div>

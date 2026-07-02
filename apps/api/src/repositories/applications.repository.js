@@ -1,3 +1,4 @@
+import { Op, fn, col } from "sequelize";
 import { db } from "../config/database.js";
 import {
   Address,
@@ -72,10 +73,29 @@ const applicationDetailIncludes = [
 export const findApplicationByEmail = (email) =>
   Employee.findOne({ where: { personal_email: email } });
 
+export const findBlockingApplicationByUserOrEmail = ({ userId, email }) => {
+  const conditions = [];
+  if (userId) conditions.push({ user_id: userId });
+  if (email) conditions.push({ personal_email: email });
+
+  if (conditions.length === 0) return null;
+
+  return Employee.findOne({
+    where: {
+      [Op.or]: conditions,
+      application_status: { [Op.ne]: APPLICATION_STATUS.DECLINED },
+    },
+    order: [["employee_id", "DESC"]],
+  });
+};
+
 export const findApplicationsByUserId = (userId) =>
   Employee.findAll({
     where: { user_id: userId },
-    order: [["employee_id", "DESC"]],
+    order: [
+      ["employee_id", "DESC"],
+      [{ model: ApplicationStatusHistory, as: "status_history" }, "history_id", "ASC"],
+    ],
     attributes: [
       "employee_id",
       "first_name",
@@ -85,15 +105,51 @@ export const findApplicationsByUserId = (userId) =>
       "application_status",
       "application_date",
     ],
+    include: [
+      {
+        model: ApplicationStatusHistory,
+        as: "status_history",
+        attributes: [
+          "history_id",
+          "previous_status",
+          "new_status",
+          "note",
+          "forwarded_to",
+          "action_label",
+          "created_at",
+        ],
+      },
+    ],
   });
 
-export const listApplications = ({ limit, offset }) =>
-  Employee.findAndCountAll({
+export const listApplications = ({ limit, offset, status }) => {
+  const where = status ? { application_status: status } : undefined;
+
+  return Employee.findAndCountAll({
+    where,
     order: [["employee_id", "DESC"]],
     limit,
     offset,
     attributes: applicationListAttributes,
   });
+};
+
+export const countApplicationsByStatus = async () => {
+  const rows = await Employee.findAll({
+    attributes: ["application_status", [fn("COUNT", col("employee_id")), "count"]],
+    group: ["application_status"],
+    raw: true,
+  });
+
+  return rows.reduce((counts, row) => {
+    counts[row.application_status] = Number(row.count) || 0;
+    counts.total += Number(row.count) || 0;
+    return counts;
+  }, { total: 0 });
+};
+
+export const countApplicationsUpToEmployeeId = (employeeId) =>
+  Employee.count({ where: { employee_id: { [Op.lte]: employeeId } } });
 
 export const findAdminApplicationById = (employeeId) =>
   Employee.findByPk(employeeId, {

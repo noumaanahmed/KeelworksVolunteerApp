@@ -42,17 +42,14 @@ const Employee = db.define("Employee", {
   linkedin_url: {
     type: DataTypes.STRING(255),
     allowNull: true,
-    unique: true,
   },
   personal_email: {
     type: DataTypes.STRING(255),
     allowNull: false,
-    unique: true,
   },
   phone: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true,
   },
   phonetype: {
     type: DataTypes.ENUM("Mobile", "Home", "Work"),

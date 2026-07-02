@@ -40,6 +40,15 @@ export const signUp = async ({ email, password, first_name, middle_name, last_na
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  if (role === "applicant" && (normalizedEmail.endsWith("@keelworks.org") || normalizedEmail.endsWith("@keelworks.com"))) {
+    throw new AppError(
+      "This email already belongs to an accepted KeelWorks employee. Please sign up with a personal email address.",
+      409,
+      "KEELWORKS_EMAIL_NOT_ALLOWED"
+    );
+  }
+
   const existingUser = await findUserByEmail(normalizedEmail);
   if (existingUser) {
     throw new AppError("Email is already registered.", 409, "DUPLICATE_EMAIL");
@@ -51,17 +60,24 @@ export const signUp = async ({ email, password, first_name, middle_name, last_na
     .filter(Boolean)
     .join(" ");
 
-  const user = await createUser({
-    email: normalizedEmail,
-    password_hash: passwordHash,
-    first_name: first_name.trim(),
-    middle_name: middle_name?.trim() || null,
-    last_name: last_name.trim(),
-    full_name: fullName,
-    role,
-  });
+  try {
+    const user = await createUser({
+      email: normalizedEmail,
+      password_hash: passwordHash,
+      first_name: first_name.trim(),
+      middle_name: middle_name?.trim() || null,
+      last_name: last_name.trim(),
+      full_name: fullName,
+      role,
+    });
 
-  return { token: signToken(user), user: publicUser(user) };
+    return { token: signToken(user), user: publicUser(user) };
+  } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      throw new AppError("Email is already registered.", 409, "DUPLICATE_EMAIL");
+    }
+    throw error;
+  }
 };
 
 export const signIn = async ({ email, password }) => {

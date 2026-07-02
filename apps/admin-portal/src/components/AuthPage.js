@@ -6,7 +6,6 @@ import {
   MDBCol,
   MDBCard,
   MDBCardBody,
-  MDBInput,
 } from "mdb-react-ui-kit";
 import "../styles/auth-page.css";
 
@@ -20,9 +19,25 @@ const getApiErrorMessage = (data) => {
   return "Something went wrong";
 };
 
+const AuthInput = ({ label, wrapperClassName = "mb-3", ...props }) => (
+  <div className={`kw-auth-field kw-auth-floating-field ${wrapperClassName}`.trim()}>
+    <input
+      id={props.id || props.name}
+      className="kw-auth-control kw-auth-floating-input"
+      placeholder=" "
+      aria-label={label}
+      {...props}
+    />
+    <label className="kw-auth-floating-label" htmlFor={props.id || props.name}>
+      {label}
+    </label>
+  </div>
+);
+
 const emptyForm = {
   email: "",
   password: "",
+  confirm_password: "",
   first_name: "",
   middle_name: "",
   last_name: "",
@@ -51,11 +66,19 @@ const AuthPage = ({ onAuthSuccess }) => {
     setLoading(true);
     setError("");
 
+    const normalizedEmail = form.email.trim().toLowerCase();
+
+    if (mode === "signup" && form.password !== form.confirm_password) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
     const endpoint = mode === "signin" ? "/api/v1/auth/signin" : "/api/v1/auth/signup";
     const body = mode === "signin"
-      ? { email: form.email, password: form.password }
+      ? { email: normalizedEmail, password: form.password }
       : {
-          email: form.email,
+          email: normalizedEmail,
           password: form.password,
           first_name: form.first_name,
           middle_name: form.middle_name,
@@ -91,10 +114,10 @@ const AuthPage = ({ onAuthSuccess }) => {
 
   return (
     <MDBContainer fluid className="p-4 kw-auth-page kw-auth-gradient overflow-hidden">
-      <MDBRow className="align-items-center min-vh-100">
+      <MDBRow className="align-items-center min-vh-100 kw-auth-layout">
         <MDBCol
           md="6"
-          className="text-center text-md-start d-flex flex-column justify-content-center"
+          className="text-center text-md-start d-flex flex-column justify-content-center kw-auth-copy-col"
         >
           <h1 className="my-5 display-3 fw-bold ls-tight px-3 kw-auth-title">
             KeelWorks Admin <br />
@@ -107,28 +130,27 @@ const AuthPage = ({ onAuthSuccess }) => {
           </p>
         </MDBCol>
 
-        <MDBCol md="6" className="position-relative">
+        <MDBCol md="6" className="position-relative d-flex justify-content-center kw-auth-card-col">
           <div className="position-absolute rounded-circle shadow-5-strong kw-auth-shape-1" />
           <div className="position-absolute shadow-5-strong kw-auth-shape-2" />
 
-          <MDBCard className="my-5 kw-auth-glass">
-            <MDBCardBody className="p-5">
+          <MDBCard className={`my-5 kw-auth-glass kw-auth-glass--${mode}`}>
+            <MDBCardBody className="kw-auth-card-body">
               <div className="text-center mb-4">
                 <h2 className="fw-bold mb-1 kw-auth-card-title">KeelWorks</h2>
-                <p className="text-muted mb-0">
+                <p className="text-muted mb-0 kw-auth-card-subtitle">
                   {mode === "signin"
                     ? "Sign in to the admin portal"
                     : "Create an admin account"}
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit}>
+              <form className="kw-auth-form" onSubmit={handleSubmit}>
                 {mode === "signup" && (
                   <>
                     <MDBRow>
                       <MDBCol md="6">
-                        <MDBInput
-                          wrapperClass="mb-4"
+                        <AuthInput
                           label="First name"
                           name="first_name"
                           type="text"
@@ -139,8 +161,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                       </MDBCol>
 
                       <MDBCol md="6">
-                        <MDBInput
-                          wrapperClass="mb-4"
+                        <AuthInput
                           label="Middle name"
                           name="middle_name"
                           type="text"
@@ -150,8 +171,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                       </MDBCol>
                     </MDBRow>
 
-                    <MDBInput
-                      wrapperClass="mb-4"
+                    <AuthInput
                       label="Last name"
                       name="last_name"
                       type="text"
@@ -162,8 +182,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                   </>
                 )}
 
-                <MDBInput
-                  wrapperClass="mb-4"
+                <AuthInput
                   label="Email address"
                   name="email"
                   type="email"
@@ -172,8 +191,7 @@ const AuthPage = ({ onAuthSuccess }) => {
                   required
                 />
 
-                <MDBInput
-                  wrapperClass="mb-4"
+                <AuthInput
                   label="Password"
                   name="password"
                   type="password"
@@ -184,9 +202,20 @@ const AuthPage = ({ onAuthSuccess }) => {
                 />
 
                 {mode === "signup" && (
+                  <AuthInput
+                    label="Confirm password"
+                    name="confirm_password"
+                    type="password"
+                    value={form.confirm_password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                  />
+                )}
+
+                {mode === "signup" && (
                   <>
-                    <MDBInput
-                      wrapperClass="mb-4"
+                    <AuthInput
                       label="Admin secret key"
                       name="admin_secret"
                       type="password"

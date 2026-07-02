@@ -31,11 +31,13 @@ Install dependencies:
 npm install
 ```
 
-Run the local database setup/reset script in MySQL Workbench:
+Run the single local database setup/reset script in MySQL Workbench:
 
 ```text
 docs/setup/SQL_SETUP_SCRIPT.sql
 ```
+
+This is the only SQL script used for initial setup. It wipes/recreates the MVP tables and seeds location data.
 
 Start local services:
 
@@ -53,23 +55,19 @@ Create a Railway project and add a MySQL database.
 
 In Railway, open the MySQL service and copy the connection details. You can connect from MySQL Workbench using the public TCP proxy values shown by Railway.
 
-Use the same setup script:
+Use the same single setup script:
 
 ```text
 docs/setup/SQL_SETUP_SCRIPT.sql
 ```
 
-Important: the script creates/uses `volunteer_management` by default. If Railway gives you a fixed database name such as `railway`, update the top of the script before running it:
+Important: the script creates/uses `volunteer_management` by default for local development. Railway MySQL usually gives you a fixed database name such as `railway`, so update the top of the script before running it:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS railway
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
 USE railway;
 ```
 
-Run the script once during hosted database setup. Run it again only when you intentionally want to wipe the hosted data and reset the schema.
+Run this one script once during hosted database setup. Run it again only when you intentionally want to wipe the hosted data and reset the schema. Do not run extra setup/patch SQL scripts for initial setup.
 
 ---
 
@@ -96,6 +94,8 @@ Set API service variables using:
 ```text
 deploy/railway-api.env.example
 ```
+
+Keep the local `.env.example` files committed in the repo. Create real `.env` files only on your local machine and do not commit them.
 
 Minimum required API variables:
 
@@ -209,6 +209,8 @@ Redeploy or restart the Railway API.
 ## 8. Important notes
 
 - Do not commit real `.env` files.
+- Do keep all `.env.example` files in the repo.
 - Do not share `MYSQLPASSWORD`, `DATABASE_URL`, `JWT_SECRET`, or `ADMIN_SIGNUP_SECRET`.
 - The SQL setup script is not run automatically on deploy. Run `docs/setup/SQL_SETUP_SCRIPT.sql` manually once in MySQL Workbench.
+- `docs/setup/SQL_SETUP_SCRIPT.sql` is the only initial setup SQL file.
 - Future code pushes redeploy the Netlify sites and Railway API, but they do not wipe the database.

@@ -1,21 +1,47 @@
 import { APPLICATION_STATUS_LABELS, getStatusActions } from "../constants/application-status.js";
 
+const toPlain = (model) => model?.toJSON ? model.toJSON() : model;
+
+const mapStatusHistory = (history = []) =>
+  history.map((item) => ({
+    history_id: item.history_id,
+    previous_status: item.previous_status,
+    previous_status_label: item.previous_status ? APPLICATION_STATUS_LABELS[item.previous_status] || item.previous_status : null,
+    new_status: item.new_status,
+    new_status_label: APPLICATION_STATUS_LABELS[item.new_status] || item.new_status,
+    note: item.note,
+    forwarded_to: item.forwarded_to,
+    action_label: item.action_label,
+    changed_by: item.changed_by ? {
+      user_id: item.changed_by.user_id,
+      full_name: item.changed_by.full_name,
+      email: item.changed_by.email,
+      role: item.changed_by.role,
+    } : null,
+    created_at: item.created_at,
+  }));
+
 export const toStatusDisplay = (status) => ({
   value: status,
   label: APPLICATION_STATUS_LABELS[status] || status,
 });
 
-export const toApplicationSummary = (application) => ({
-  employee_id: application.employee_id,
-  user_id: application.user_id,
-  first_name: application.first_name,
-  middle_name: application.middle_name,
-  last_name: application.last_name,
-  interested_role: application.interested_role,
-  application_status: application.application_status,
-  application_status_label: APPLICATION_STATUS_LABELS[application.application_status] || application.application_status,
-  application_date: application.application_date,
-});
+export const toApplicationSummary = (application) => {
+  const plain = toPlain(application);
+
+  return {
+    employee_id: plain.employee_id,
+    user_id: plain.user_id,
+    first_name: plain.first_name,
+    middle_name: plain.middle_name,
+    last_name: plain.last_name,
+    interested_role: plain.interested_role,
+    application_status: plain.application_status,
+    application_status_label: APPLICATION_STATUS_LABELS[plain.application_status] || plain.application_status,
+    application_date: plain.application_date,
+    status_history: mapStatusHistory(plain.status_history || []),
+  };
+};
 
 export const toAdminApplicationRow = (application) => ({
   employee_id: application.employee_id,
@@ -41,8 +67,6 @@ export const toAdminApplicationRow = (application) => ({
   additional_info: application.additional_info,
   interested_role: application.interested_role,
 });
-
-const toPlain = (model) => model?.toJSON ? model.toJSON() : model;
 
 const mapAddress = (application) => {
   const address = toPlain(application.Address);
@@ -72,25 +96,6 @@ const mapAddress = (application) => {
     } : null,
   };
 };
-
-const mapStatusHistory = (history = []) =>
-  history.map((item) => ({
-    history_id: item.history_id,
-    previous_status: item.previous_status,
-    previous_status_label: item.previous_status ? APPLICATION_STATUS_LABELS[item.previous_status] || item.previous_status : null,
-    new_status: item.new_status,
-    new_status_label: APPLICATION_STATUS_LABELS[item.new_status] || item.new_status,
-    note: item.note,
-    forwarded_to: item.forwarded_to,
-    action_label: item.action_label,
-    changed_by: item.changed_by ? {
-      user_id: item.changed_by.user_id,
-      full_name: item.changed_by.full_name,
-      email: item.changed_by.email,
-      role: item.changed_by.role,
-    } : null,
-    created_at: item.created_at,
-  }));
 
 export const toAdminApplicationDetail = (application) => {
   const plain = toPlain(application);

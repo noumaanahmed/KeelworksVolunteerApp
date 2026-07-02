@@ -1,6 +1,6 @@
 # KeelWorks Volunteer Application Platform
 
-A cleaned MVP for the KeelWorks volunteer application workflow. The project is an npm-workspaces monorepo with two React portals and one Express/MySQL API.
+A deploy-ready MVP for the KeelWorks volunteer application workflow. The project is an npm-workspaces monorepo with two React portals and one Express/MySQL API.
 
 The app supports two ways of running:
 
@@ -11,9 +11,9 @@ The app supports two ways of running:
 
 | Workspace | Purpose | Default Port |
 |---|---|---:|
-| `apps/applicant-portal` | Applicant sign-up, sign-in, dashboard, and volunteer application form | `3001` |
-| `apps/admin-portal` | Admin sign-up, sign-in, and application review dashboard | `3002` |
-| `apps/api` | Express API, auth, application workflow, email, and MySQL persistence | `3000` |
+| `apps/applicant-portal` | Applicant sign-up, sign-in, dashboard, journey tracking, and volunteer application form | `3001` |
+| `apps/admin-portal` | Admin sign-up, sign-in, application review, status filtering, and workflow dashboard | `3002` |
+| `apps/api` | Express API, auth, real-time events, application workflow, email, and MySQL persistence | `3000` |
 | `packages/shared-ui` | Shared React UI components used by both portals | n/a |
 
 ## Current MVP Features
@@ -22,35 +22,48 @@ The app supports two ways of running:
 
 - Applicant sign-up and sign-in.
 - Applicant dashboard for submitted applications.
+- Real-time application status updates through Socket.IO.
+- Notification dropdown for recent application updates.
+- Expandable application journey/progress timeline.
 - Multi-step volunteer application form.
+- Clickable completed stepper sections so applicants can jump back to filled sections.
 - Country, state/province, and city lookup.
 - Application submission tied to the signed-in user account.
-- Optional confirmation email after submission.
-- MDB-styled authentication screen.
+- Applicant name/email fields are locked from editing in the application form.
+- Applicants cannot sign up with `@keelworks.org` or `@keelworks.com` email addresses.
+- Applicants can submit another application only after the current application is declined.
+- Light/night mode styling on dashboard and application form.
+- Animated submit/thank-you flow.
 
 ### Admin portal
 
 - Admin sign-up and sign-in.
 - Admin-only dashboard.
+- Real-time dashboard updates when new applications are submitted.
+- Notification dropdown for recent application updates.
+- Status filter cards with counts.
+- Admin-selectable page size for application list: 5, 10, or 20 per page.
 - Paginated application list.
-- Full application detail modal.
+- Full application detail modal with popup/expand animation.
 - Controlled application status workflow.
 - Status action buttons based on the current status.
 - Internal notes and status history timeline.
-- MDB-styled authentication screen.
+- Light/night mode styling.
 
 ### Backend API
 
 - JWT authentication.
 - Admin authorization middleware.
+- Duplicate account prevention through `users.email` unique constraint.
 - Centralized error handling.
 - Environment validation at startup.
-- Layered backend structure: routes, controllers, services, repositories, models.
+- Layered backend structure: routes, controllers, services, repositories, models, middleware, validators, config, and utils.
 - Sequelize models for the active MVP schema.
 - Transaction-based application creation.
 - Application ownership through `users.user_id -> Employee.user_id`.
 - EEO record linked through `EEOData.employee_id`.
 - Admin status audit trail through `ApplicationStatusHistory`.
+- Socket.IO real-time events for new applications and status updates.
 
 ## Admin Application Workflow
 
@@ -88,6 +101,8 @@ KeelworksVolunteerApp/
         components/
         config/
           api.js
+        services/
+          socket.js
         styles/
           app.css
           auth-page.css
@@ -102,6 +117,8 @@ KeelworksVolunteerApp/
         components/
         config/
           api.js
+        services/
+          socket.js
         styles/
           admin-dashboard.css
           auth-page.css
@@ -120,6 +137,8 @@ KeelworksVolunteerApp/
         mappers/
         middleware/
         models/
+        realtime/
+          socket.js
         repositories/
         routes/
         services/
@@ -147,9 +166,32 @@ KeelworksVolunteerApp/
   README.md
 ```
 
+## Environment File Rules
+
+Local `.env.example` files are intentionally included and should stay in the repo:
+
+```text
+apps/api/.env.example
+apps/applicant-portal/.env.example
+apps/admin-portal/.env.example
+deploy/railway-api.env.example
+deploy/netlify-applicant.env.example
+deploy/netlify-admin.env.example
+```
+
+Real `.env` files should never be committed:
+
+```text
+apps/api/.env
+apps/applicant-portal/.env
+apps/admin-portal/.env
+```
+
+The `.env.example` files are used by developers as copy/paste templates for local setup and deployment variables. Do not remove them.
+
 ## Frontend Styling
 
-Both React portals use MDB React UI Kit for the authentication layout. Portal-level styles live outside components:
+Both React portals use a custom glass-card authentication layout inspired by MDB styling. Portal-level styles live outside components:
 
 ```text
 apps/applicant-portal/src/styles/
@@ -183,12 +225,13 @@ React portal
 Why this structure is used:
 
 - **Routes** define URL paths and attach middleware.
-- **Controllers** translate HTTP requests/responses.
+- **Controllers** translate HTTP requests/responses and emit real-time events when needed.
 - **Services** contain business workflows.
 - **Repositories** perform database access.
 - **Validators** normalize and validate incoming data.
 - **Models** describe database tables and relationships.
 - **Middleware** handles auth, validation, and errors.
+- **Realtime** configures Socket.IO and authenticated rooms.
 
 ## Prerequisites
 
@@ -231,11 +274,9 @@ EMAIL_APP_PASSWORD=
 
 Email settings are optional. If Gmail credentials are not configured, confirmation email sending is skipped without blocking application submission.
 
-Do not commit real `.env` files. Commit only `.env.example` files.
-
 ## Database Setup
 
-There is only one setup/reset script:
+There is only one setup/reset SQL script:
 
 ```text
 docs/setup/SQL_SETUP_SCRIPT.sql
@@ -249,9 +290,20 @@ The script creates/uses this database by default:
 volunteer_management
 ```
 
-For a hosted MySQL provider like Railway, use the same script. If your provider gives you a fixed database/schema name, update the top of the script to use that database before running it.
+For Railway MySQL, the database is usually already named `railway`. In that case, update the top of `docs/setup/SQL_SETUP_SCRIPT.sql` before running it:
 
-Run this script:
+```sql
+USE railway;
+```
+
+Do not use any separate patch/setup SQL scripts for initial setup. The main setup script already includes the current schema for:
+
+- duplicate account prevention through `users.email`,
+- application status history,
+- real-time-compatible application ownership through `Employee.user_id`,
+- non-unique application contact indexes so declined applicants can reapply later.
+
+Run the setup script:
 
 - once during initial local setup,
 - once during initial hosted database setup,
@@ -278,7 +330,7 @@ From the repository root:
 npm install
 ```
 
-This installs dependencies for all workspaces and generates the root `package-lock.json`.
+This installs dependencies for all workspaces and generates/updates the root `package-lock.json`.
 
 ## Run Locally
 
@@ -401,11 +453,13 @@ Admin sign-up requires `admin_secret` matching `ADMIN_SIGNUP_SECRET`.
 ## Development Rules
 
 - Do not commit real `.env` files.
+- Keep local `.env.example` files committed.
+- Use only `docs/setup/SQL_SETUP_SCRIPT.sql` for initial database setup.
+- Do not add extra one-off SQL setup scripts unless a true migration system is introduced.
 - Keep route files thin.
 - Keep controllers thin.
 - Put business workflows in services.
 - Put database access in repositories.
-- Keep database setup in `docs/setup/SQL_SETUP_SCRIPT.sql` until a real migration system is introduced.
 - Add a new endpoint only when it is connected end-to-end from frontend to backend to database.
 
 ## Recommended Next Features

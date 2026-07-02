@@ -212,3 +212,226 @@ input[type="file"] {
   font-size: 13px;
   line-height: 1.5;
 }
+
+.input-readonly,
+input:disabled.input-readonly {
+  background: #eef2f7 !important;
+  border-color: #d1d5db !important;
+  color: #64748b !important;
+  cursor: not-allowed;
+}
+
+.form-step-shell {
+  animation: kw-form-step-in 220ms ease both;
+}
+
+@keyframes kw-form-step-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.thank-you-overlay {
+  align-items: center;
+  background: linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 100%);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.thank-you-card {
+  animation: kw-thank-card 360ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  max-width: 500px;
+  overflow: hidden;
+  padding: 48px 40px;
+  text-align: center;
+  width: 100%;
+}
+
+.thank-you-icon {
+  animation: kw-thank-shake 850ms ease 320ms both;
+  font-size: 60px;
+  margin-bottom: 18px;
+}
+
+.thank-you-card h2 {
+  animation: kw-thank-text 280ms ease 520ms both;
+  color: #1a3c5e;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.thank-you-card p {
+  animation: kw-thank-text 280ms ease 680ms both;
+  color: #555555;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.thank-you-card button {
+  animation: kw-thank-text 280ms ease 820ms both;
+  background: #1a3c5e;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 28px;
+}
+
+@keyframes kw-thank-card {
+  0% { opacity: 0; transform: translateY(26px) scale(0.72); max-width: 220px; }
+  70% { opacity: 1; transform: translateY(-4px) scale(1.02); max-width: 500px; }
+  100% { opacity: 1; transform: translateY(0) scale(1); max-width: 500px; }
+}
+
+@keyframes kw-thank-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-14deg) scale(1.08); }
+  40% { transform: rotate(12deg) scale(1.08); }
+  60% { transform: rotate(-8deg) scale(1.05); }
+  80% { transform: rotate(6deg) scale(1.03); }
+}
+
+@keyframes kw-thank-text {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Applicant application form night mode ===== */
+.applicant-form-page {
+  background: #ffffff;
+  color: #1f2937;
+  min-height: 100vh;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.form-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  position: absolute;
+  right: 20px;
+  top: 16px;
+  z-index: 2;
+}
+
+.form-theme-toggle {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 9px 13px;
+}
+
+.form-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.applicant-form-page--dark {
+  background: #101827;
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark .form-container {
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark h5,
+.applicant-form-page--dark label {
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark input[type="text"],
+.applicant-form-page--dark input[type="email"],
+.applicant-form-page--dark input[type="tel"],
+.applicant-form-page--dark input[type="date"],
+.applicant-form-page--dark select,
+.applicant-form-page--dark textarea {
+  background: #172335;
+  border-color: #31425c;
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark input::placeholder,
+.applicant-form-page--dark textarea::placeholder {
+  color: #94a3b8;
+}
+
+.applicant-form-page--dark .input-readonly,
+.applicant-form-page--dark input:disabled.input-readonly {
+  background: #1f2f45 !important;
+  border-color: #3b4f6c !important;
+  color: #aab7c8 !important;
+}
+
+.applicant-form-page--dark .error-summary {
+  background: #3a1717;
+  border-color: #7f1d1d;
+  color: #fecaca;
+}
+
+.applicant-form-page--dark .field-error {
+  color: #fca5a5;
+}
+
+.applicant-form-page--dark .back-button {
+  background: #334155;
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark .submit-button {
+  background: #f7b500;
+  color: #172033;
+}
+
+@keyframes kw-applicant-journey-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ===== UI polish v3: applicant form night mode and cleaner readonly fields ===== */
+.applicant-form-page .form-container {
+  transition: color 180ms ease;
+}
+
+.input-readonly,
+input:disabled.input-readonly {
+  opacity: 1 !important;
+  -webkit-text-fill-color: #64748b;
+}
+
+.applicant-form-page--dark .headerBgImg {
+  filter: brightness(26%) saturate(85%);
+}
+
+.applicant-form-page--dark .form-container,
+.applicant-form-page--dark .form-container h5,
+.applicant-form-page--dark .form-container label {
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark .form-container input,
+.applicant-form-page--dark .form-container select,
+.applicant-form-page--dark .form-container textarea {
+  background: #172335;
+  border-color: #31425c;
+  color: #e5edf7;
+}
+
+.applicant-form-page--dark .form-container input:disabled.input-readonly,
+.applicant-form-page--dark .form-container .input-readonly {
+  background: #1f2f45 !important;
+  border-color: #3b4f6c !important;
+  color: #aab7c8 !important;
+  -webkit-text-fill-color: #aab7c8;
+}
