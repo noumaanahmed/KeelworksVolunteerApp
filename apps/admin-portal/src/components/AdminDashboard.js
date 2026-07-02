@@ -48,9 +48,12 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
   const [searchText, setSearchText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [appliedDateFilter, setAppliedDateFilter] = useState("");
-  const [sortBy, setSortBy] = useState("id");
-  const [sortDirection, setSortDirection] = useState("desc");
+  const [appliedDateStartFilter, setAppliedDateStartFilter] = useState("");
+  const [appliedDateEndFilter, setAppliedDateEndFilter] = useState("");
+  const [appliedDateDraftStart, setAppliedDateDraftStart] = useState("");
+  const [appliedDateDraftEnd, setAppliedDateDraftEnd] = useState("");
+  const [sortBy, setSortBy] = useState("");
+  const [sortDirection, setSortDirection] = useState("");
   const [columnFilterOpen, setColumnFilterOpen] = useState(null);
   const [filterOptions, setFilterOptions] = useState({ roles: [], applied_dates: [] });
 
@@ -77,7 +80,8 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     filter = statusFilter,
     query = searchQuery,
     role = roleFilter,
-    appliedDate = appliedDateFilter,
+    appliedDateStart = appliedDateStartFilter,
+    appliedDateEnd = appliedDateEndFilter,
     sortColumn = sortBy,
     sort = sortDirection
   ) => {
@@ -92,7 +96,8 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
         status: filter,
         search: query,
         role,
-        appliedDate,
+        appliedDateStart,
+        appliedDateEnd,
         sortBy: sortColumn,
         sort,
       });
@@ -105,11 +110,11 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, statusFilter, pageSize, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection]);
+  }, [token, statusFilter, pageSize, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection]);
 
   useEffect(() => {
-    fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
-  }, [page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection, fetchApplications]);
+    fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection);
+  }, [page, statusFilter, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection, fetchApplications]);
 
   useEffect(() => {
     localStorage.setItem("kw_admin_theme", theme);
@@ -131,7 +136,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
           ? `New application received from ${application.first_name || "an applicant"} ${application.last_name || ""}.`.trim()
           : "New application received."
       );
-      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
+      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection);
     });
 
     socket.on("application:statusUpdated", async ({ application }) => {
@@ -142,7 +147,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
         );
       }
 
-      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
+      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection);
 
       if (!application) return;
 
@@ -160,7 +165,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     return () => {
       socket.disconnect();
     };
-  }, [token, page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection, fetchApplications, addNotification]);
+  }, [token, page, statusFilter, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection, fetchApplications, addNotification]);
 
   const filterCards = useMemo(() => STATUS_FILTER_CARDS.map((card) => ({
     ...card,
@@ -207,7 +212,7 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
       addNotification(
         `Application #${updatedApplication.application_number || updatedApplication.employee_id} changed to ${statusLabel(updatedApplication.application_status, updatedApplication.application_status_label)}.`
       );
-      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateFilter, sortBy, sortDirection);
+      await fetchApplications(page, statusFilter, searchQuery, roleFilter, appliedDateStartFilter, appliedDateEndFilter, sortBy, sortDirection);
     } catch (err) {
       setDetailError(err.message || "Failed to update application status");
     } finally {
@@ -242,17 +247,25 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     setSearchText("");
     setSearchQuery("");
     setRoleFilter("");
-    setAppliedDateFilter("");
+    setAppliedDateStartFilter("");
+    setAppliedDateEndFilter("");
+    setAppliedDateDraftStart("");
+    setAppliedDateDraftEnd("");
     setColumnFilterOpen(null);
     setPage(1);
   };
 
   const handleSortChange = (column) => {
-    setSortDirection((currentDirection) => {
-      if (sortBy !== column) return "asc";
-      return currentDirection === "asc" ? "desc" : "asc";
-    });
-    setSortBy(column);
+    if (sortBy !== column) {
+      setSortBy(column);
+      setSortDirection("asc");
+    } else if (sortDirection === "asc") {
+      setSortDirection("desc");
+    } else {
+      setSortBy("");
+      setSortDirection("");
+    }
+
     setPage(1);
   };
 
@@ -267,11 +280,50 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
     setPage(1);
   };
 
-  const handleAppliedDateFilterChange = (date) => {
-    setAppliedDateFilter(date);
+  const openColumnFilter = (filterName) => {
+    setColumnFilterOpen((current) => {
+      const next = current === filterName ? null : filterName;
+      if (next === "applied") {
+        setAppliedDateDraftStart(appliedDateStartFilter);
+        setAppliedDateDraftEnd(appliedDateEndFilter);
+      }
+      return next;
+    });
+  };
+
+  const applyDateRangeFilter = () => {
+    setAppliedDateStartFilter(appliedDateDraftStart);
+    setAppliedDateEndFilter(appliedDateDraftEnd);
     setColumnFilterOpen(null);
     setPage(1);
   };
+
+  const clearAppliedDateFilter = () => {
+    setAppliedDateStartFilter("");
+    setAppliedDateEndFilter("");
+    setAppliedDateDraftStart("");
+    setAppliedDateDraftEnd("");
+    setColumnFilterOpen(null);
+    setPage(1);
+  };
+
+  const clearRoleFilter = () => {
+    setRoleFilter("");
+    setColumnFilterOpen(null);
+    setPage(1);
+  };
+
+  const activeFilters = [
+    statusFilter && { key: "status", label: `Status: ${STATUS_LABELS[statusFilter] || statusFilter}`, onClear: () => handleFilterChange("") },
+    searchQuery && { key: "search", label: `Search: ${searchQuery}`, onClear: handleSearchClear },
+    roleFilter && { key: "role", label: `Role: ${roleFilter}`, onClear: clearRoleFilter },
+    (appliedDateStartFilter || appliedDateEndFilter) && {
+      key: "applied-date",
+      label: `Applied: ${appliedDateStartFilter ? formatDate(appliedDateStartFilter) : "Any"} – ${appliedDateEndFilter ? formatDate(appliedDateEndFilter) : "Any"}`,
+      onClear: clearAppliedDateFilter,
+    },
+    sortBy && { key: "sort", label: `Sort: ${sortBy} ${sortDirection === "asc" ? "ascending" : "descending"}`, onClear: () => { setSortBy(""); setSortDirection(""); setPage(1); } },
+  ].filter(Boolean);
 
   return (
     <div className={`admin-page ${isDark ? "admin-page--dark" : ""}`}>
@@ -331,15 +383,23 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
           ))}
         </section>
 
-        {(statusFilter || searchQuery || roleFilter || appliedDateFilter) && (
-          <div className="active-filter-bar">
-            <span>
-              {statusFilter ? `Showing ${STATUS_LABELS[statusFilter] || statusFilter} applications` : "Showing all statuses"}
-              {searchQuery ? ` matching "${searchQuery}"` : ""}
-              {roleFilter ? ` for ${roleFilter}` : ""}
-              {appliedDateFilter ? ` applied on ${formatDate(appliedDateFilter)}` : ""}.
-            </span>
-            <button type="button" onClick={clearAllFilters}>Clear filters</button>
+        {activeFilters.length > 0 && (
+          <div className="active-filter-bar" aria-label="Active filters">
+            <div className="active-filter-chips">
+              {activeFilters.map((filter) => (
+                <button
+                  key={filter.key}
+                  type="button"
+                  className="active-filter-chip"
+                  onClick={filter.onClear}
+                  title={`Clear ${filter.label}`}
+                >
+                  <span>{filter.label}</span>
+                  <strong aria-hidden="true">×</strong>
+                </button>
+              ))}
+            </div>
+            <button type="button" className="clear-all-filters-button" onClick={clearAllFilters}>Clear all</button>
           </div>
         )}
 
@@ -423,12 +483,16 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
                         <button
                           type="button"
                           className={`table-header-button table-filter-button ${roleFilter ? "table-filter-button--active" : ""}`}
-                          onClick={() => setColumnFilterOpen((current) => current === "role" ? null : "role")}
+                          onClick={() => openColumnFilter("role")}
                         >
                           Role <span>{roleFilter ? "●" : "▾"}</span>
                         </button>
                         {columnFilterOpen === "role" && (
                           <div className="column-filter-menu">
+                            <div className="column-filter-menu-header">
+                              <strong>Filter by role</strong>
+                              <button type="button" onClick={clearRoleFilter} disabled={!roleFilter}>Clear</button>
+                            </div>
                             <button type="button" onClick={() => handleRoleFilterChange("")}>All roles</button>
                             {(filterOptions.roles || []).map((role) => (
                               <button
@@ -450,25 +514,34 @@ const AdminDashboard = ({ user, token, onSignOut }) => {
                       <div className="column-filter-wrapper">
                         <button
                           type="button"
-                          className={`table-header-button table-filter-button ${appliedDateFilter ? "table-filter-button--active" : ""}`}
-                          onClick={() => setColumnFilterOpen((current) => current === "applied" ? null : "applied")}
+                          className={`table-header-button table-filter-button ${(appliedDateStartFilter || appliedDateEndFilter) ? "table-filter-button--active" : ""}`}
+                          onClick={() => openColumnFilter("applied")}
                         >
-                          Applied <span>{appliedDateFilter ? "●" : "▾"}</span>
+                          Applied <span>{(appliedDateStartFilter || appliedDateEndFilter) ? "●" : "▾"}</span>
                         </button>
                         {columnFilterOpen === "applied" && (
-                          <div className="column-filter-menu column-filter-menu--right">
-                            <button type="button" onClick={() => handleAppliedDateFilterChange("")}>All dates</button>
-                            {(filterOptions.applied_dates || []).map((date) => (
-                              <button
-                                type="button"
-                                key={date}
-                                className={appliedDateFilter === date ? "column-filter-option--active" : ""}
-                                onClick={() => handleAppliedDateFilterChange(date)}
-                              >
-                                {formatDate(date)}
-                              </button>
-                            ))}
-                            {(filterOptions.applied_dates || []).length === 0 && <span>No dates available</span>}
+                          <div className="column-filter-menu column-filter-menu--right column-filter-menu--date-range">
+                            <div className="column-filter-menu-header">
+                              <strong>Applied date range</strong>
+                              <button type="button" onClick={clearAppliedDateFilter} disabled={!appliedDateStartFilter && !appliedDateEndFilter}>Clear</button>
+                            </div>
+                            <label className="date-range-field">
+                              <span>From</span>
+                              <input
+                                type="date"
+                                value={appliedDateDraftStart}
+                                onChange={(event) => setAppliedDateDraftStart(event.target.value)}
+                              />
+                            </label>
+                            <label className="date-range-field">
+                              <span>To</span>
+                              <input
+                                type="date"
+                                value={appliedDateDraftEnd}
+                                onChange={(event) => setAppliedDateDraftEnd(event.target.value)}
+                              />
+                            </label>
+                            <button type="button" className="column-filter-apply-button" onClick={applyDateRangeFilter}>Apply range</button>
                           </div>
                         )}
                       </div>

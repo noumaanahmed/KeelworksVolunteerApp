@@ -567,3 +567,28 @@
   box-shadow: none !important;
   padding: 0 !important;
 }
+
+/* ===== Auth polish v9: clean floating label cutout without strikethrough ===== */
+.kw-auth-glass {
+  --kw-auth-card-bg: #eef4fa;
+}
+
+.kw-auth-floating-label {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  text-shadow: none !important;
+}
+
+.kw-auth-floating-input:focus + .kw-auth-floating-label,
+.kw-auth-floating-input:not(:placeholder-shown) + .kw-auth-floating-label {
+  background: var(--kw-auth-card-bg) !important;
+  padding: 0 0.38rem !important;
+  top: -0.48rem;
+  transform: none;
+}
+
+.kw-auth-control.kw-auth-floating-input:focus {
+  box-shadow: 0 0 0 4px rgba(45, 108, 223, 0.16) !important;
+}

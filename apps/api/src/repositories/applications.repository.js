@@ -122,16 +122,20 @@ export const findApplicationsByUserId = (userId) =>
     ],
   });
 
-const normalizeDateFilterRange = (value) => {
+const normalizeDateStart = (value) => {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return null;
 
   const start = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(start.getTime())) return null;
+  return Number.isNaN(start.getTime()) ? null : start;
+};
+
+const normalizeDateEndExclusive = (value) => {
+  const start = normalizeDateStart(value);
+  if (!start) return null;
 
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
-
-  return { start, end };
+  return end;
 };
 
 const getSortOrder = ({ sortBy = "id", sortDirection = "DESC" }) => {
@@ -154,7 +158,8 @@ export const listApplications = ({
   status,
   search,
   role,
-  appliedDate,
+  appliedDateStart,
+  appliedDateEnd,
   sortBy = "id",
   sortDirection = "DESC",
 }) => {
@@ -168,12 +173,12 @@ export const listApplications = ({
     where.interested_role = role;
   }
 
-  const dateRange = normalizeDateFilterRange(appliedDate);
-  if (dateRange) {
-    where.application_date = {
-      [Op.gte]: dateRange.start,
-      [Op.lt]: dateRange.end,
-    };
+  const dateStart = normalizeDateStart(appliedDateStart);
+  const dateEnd = normalizeDateEndExclusive(appliedDateEnd);
+  if (dateStart || dateEnd) {
+    where.application_date = {};
+    if (dateStart) where.application_date[Op.gte] = dateStart;
+    if (dateEnd) where.application_date[Op.lt] = dateEnd;
   }
 
   const normalizedSearch = search ? String(search).trim() : "";

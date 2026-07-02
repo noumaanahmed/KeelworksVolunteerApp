@@ -23,15 +23,17 @@ export const fetchAdminApplications = async ({
   status = "",
   search = "",
   role = "",
-  appliedDate = "",
-  sortBy = "id",
-  sort = "desc",
+  appliedDateStart = "",
+  appliedDateEnd = "",
+  sortBy = "",
+  sort = "",
 }) => {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (status) params.set("status", status);
   if (search) params.set("search", search);
   if (role) params.set("role", role);
-  if (appliedDate) params.set("applied_date", appliedDate);
+  if (appliedDateStart) params.set("applied_date_start", appliedDateStart);
+  if (appliedDateEnd) params.set("applied_date_end", appliedDateEnd);
   if (sortBy) params.set("sort_by", sortBy);
   if (sort) params.set("sort", sort);
 

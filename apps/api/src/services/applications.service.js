@@ -39,6 +39,18 @@ const normalizeNote = (value) => {
   return trimmed || null;
 };
 
+const normalizeDateQuery = (value) => {
+  if (value === undefined || value === null) return "";
+  return String(value).trim();
+};
+
+const assertValidDateQuery = (value, code, label) => {
+  if (!value) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new AppError(`${label} must use YYYY-MM-DD format.`, 400, code);
+  }
+};
+
 export const submitApplication = async (payload, authenticatedUser) => {
   const validated = validateApplicationPayload(payload, authenticatedUser);
 
@@ -86,7 +98,8 @@ export const getAdminApplications = async (query) => {
   const requestedStatus = query?.status ? String(query.status).trim() : "";
   const requestedSearch = query?.search ? String(query.search).trim().slice(0, 100) : "";
   const requestedRole = query?.role ? String(query.role).trim().slice(0, 120) : "";
-  const requestedAppliedDate = query?.applied_date ? String(query.applied_date).trim() : "";
+  const requestedAppliedDateStart = normalizeDateQuery(query?.applied_date_start || query?.applied_date_from);
+  const requestedAppliedDateEnd = normalizeDateQuery(query?.applied_date_end || query?.applied_date_to);
   const requestedSort = String(query?.sort || "desc").toLowerCase() === "asc" ? "ASC" : "DESC";
   const requestedSortBy = ["id", "name", "email", "role", "applied"].includes(String(query?.sort_by || "").toLowerCase())
     ? String(query.sort_by).toLowerCase()
@@ -96,8 +109,11 @@ export const getAdminApplications = async (query) => {
     throw new AppError("Unknown application status filter.", 400, "INVALID_APPLICATION_STATUS", { status: requestedStatus });
   }
 
-  if (requestedAppliedDate && !/^\d{4}-\d{2}-\d{2}$/.test(requestedAppliedDate)) {
-    throw new AppError("Applied date filter must use YYYY-MM-DD format.", 400, "INVALID_APPLIED_DATE_FILTER");
+  assertValidDateQuery(requestedAppliedDateStart, "INVALID_APPLIED_DATE_START_FILTER", "Applied start date filter");
+  assertValidDateQuery(requestedAppliedDateEnd, "INVALID_APPLIED_DATE_END_FILTER", "Applied end date filter");
+
+  if (requestedAppliedDateStart && requestedAppliedDateEnd && requestedAppliedDateStart > requestedAppliedDateEnd) {
+    throw new AppError("Applied start date cannot be after applied end date.", 400, "INVALID_APPLIED_DATE_RANGE");
   }
 
   const [result, statusCounts, filterOptions] = await Promise.all([
@@ -107,7 +123,8 @@ export const getAdminApplications = async (query) => {
       status: requestedStatus || null,
       search: requestedSearch,
       role: requestedRole || null,
-      appliedDate: requestedAppliedDate || null,
+      appliedDateStart: requestedAppliedDateStart || null,
+      appliedDateEnd: requestedAppliedDateEnd || null,
       sortBy: requestedSortBy,
       sortDirection: requestedSort,
     }),
@@ -136,7 +153,8 @@ export const getAdminApplications = async (query) => {
       status: requestedStatus || null,
       search: requestedSearch || null,
       role: requestedRole || null,
-      applied_date: requestedAppliedDate || null,
+      applied_date_start: requestedAppliedDateStart || null,
+      applied_date_end: requestedAppliedDateEnd || null,
       sort_by: requestedSortBy,
       sort: requestedSort.toLowerCase(),
     },
